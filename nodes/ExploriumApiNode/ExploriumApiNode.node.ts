@@ -113,8 +113,6 @@ export class ExploriumApiNode implements INodeType {
 				throw new NodeOperationError(this.getNode(), `Operation ${operation} not found`);
 			}
 
-			const credentials = await this.getCredentials('exploriumApi');
-
 			let body: Record<string, any> | undefined;
 			if (parameters.body) {
 				if (typeof parameters.body === 'string') {
@@ -134,15 +132,11 @@ export class ExploriumApiNode implements INodeType {
 			}
 
 			// Make API request
-			const response = await this.helpers.httpRequest({
+			const response = await this.helpers.httpRequestWithAuthentication.call(this, 'exploriumApi', {
 				method: 'method' in operationConfig ? operationConfig.method : 'POST',
 				url: `https://api.explorium.ai${operationConfig.endpoint}`,
 				body,
 				qs: search,
-				headers: {
-					'content-type': 'application/json',
-					api_key: credentials.exploriumApiKey,
-				},
 				json: true,
 			});
 
