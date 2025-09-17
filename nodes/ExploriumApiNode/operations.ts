@@ -87,47 +87,74 @@ export const autocompleteFields = [
 	{ name: 'Company Size', value: 'company_size' },
 ];
 
+// New flexible example structure
+export interface JsonExample {
+	/** Description shown in tooltip/hover to inform users about the structure */
+	description: string;
+	/** Default JSON value for this example */
+	default: string;
+	/** Display conditions - when this example should be shown */
+	displayOptions: { show?: Record<string, any>; hide?: Record<string, any> };
+}
+
 export const operations = {
 	match: {
 		displayName: 'Match',
 		description: 'Find and match businesses or prospects to get their Explorium IDs',
-		examples: {
-			business: JSON.stringify(
-				{
-					businesses_to_match: [
-						{
-							name: 'Microsoft',
-							domain: 'microsoft.com',
-						},
-						{
-							name: 'Apple Inc.',
-							domain: 'apple.com',
-						},
-						{
-							name: 'Google',
-							domain: 'google.com',
-						},
-					],
+		examples: [
+			{
+				description: 'Match businesses by name and domain to get their Explorium business IDs',
+				default: JSON.stringify(
+					{
+						businesses_to_match: [
+							{
+								name: 'Microsoft',
+								domain: 'microsoft.com',
+							},
+							{
+								name: 'Apple Inc.',
+								domain: 'apple.com',
+							},
+							{
+								name: 'Google',
+								domain: 'google.com',
+							},
+						],
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+					},
 				},
-				null,
-				2,
-			),
-			prospect: JSON.stringify(
-				{
-					prospects_to_match: [
-						{
-							email: 'omer.prizner@explorium.ai',
-							full_name: 'Omer Prizner',
-							phone_number: '',
-							company_name: '',
-							linkedin: '',
-						},
-					],
+			},
+			{
+				description:
+					'Match prospects by email, name, or other identifiers to get their Explorium prospect IDs',
+				default: JSON.stringify(
+					{
+						prospects_to_match: [
+							{
+								email: 'omer.prizner@explorium.ai',
+								full_name: 'Omer Prizner',
+								phone_number: '',
+								company_name: '',
+								linkedin: '',
+							},
+						],
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+					},
 				},
-				null,
-				2,
-			),
-		},
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -162,7 +189,7 @@ export const operations = {
 				displayOptions: { show: { type: ['businesses'] } },
 				options: [
 					{
-						name: 'businesses',
+						name: 'businesses_to_match',
 						displayName: 'Businesses',
 						values: [
 							{
@@ -198,7 +225,7 @@ export const operations = {
 				displayOptions: { show: { type: ['prospects'] } },
 				options: [
 					{
-						name: 'prospects',
+						name: 'prospects_to_match',
 						displayName: 'Prospects',
 						values: [
 							{
@@ -258,131 +285,116 @@ export const operations = {
 	enrich: {
 		displayName: 'Enrich',
 		description: 'Add additional data to existing records',
-		examples: {
-			'business-firmographics': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
+		examples: [
+			{
+				description: 'Enrich businesses using business Explorium IDs',
+				default: JSON.stringify(
+					{
+						business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: { type: ['businesses'], match: [false] },
+					hide: { enrichment: ['website_keywords'] },
 				},
-				null,
-				2,
-			),
-			'business-technographics': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-company_ratings': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-financial_metrics': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748'],
-				},
-				null,
-				2,
-			),
-			'business-funding_and_acquisitions': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-challenges': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-competitive_landscape': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-strategic_insights': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-workforce_trends': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-linkedin_posts': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-website_changes': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-				},
-				null,
-				2,
-			),
-			'business-website_keywords': JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-					parameters: {
-						keywords: ['software', 'cloud'],
+			},
+			{
+				description: 'Enrich businesses using business IDs (filter by website keywords)',
+				default: JSON.stringify(
+					{
+						business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
+						parameters: {
+							keywords: ['software', 'cloud'],
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						match: [false],
+						enrichment: ['website_keywords'],
 					},
 				},
-				null,
-				2,
-			),
-			'prospect-contacts': JSON.stringify(
-				{
-					prospect_ids: [
-						'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-						'4c485f009d59e319dc039cdf3e935b85014e6a33',
-						'fd4c46716295a2e4731417eee802a883280e4d57',
-						'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
-					],
+			},
+			{
+				description: 'Enrich prospects using prospect Explorium IDs',
+				default: JSON.stringify(
+					{
+						prospect_ids: [
+							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+							'4c485f009d59e319dc039cdf3e935b85014e6a33',
+							'fd4c46716295a2e4731417eee802a883280e4d57',
+							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
+						],
+					},
+					null,
+					2,
+				),
+				displayOptions: { show: { type: ['prospects'], match: [false] } },
+			},
+			{
+				description: 'Enrich businesses using business info',
+				default: JSON.stringify(
+					{
+						businesses_to_match: [
+							{ name: 'Microsoft', domain: 'microsoft.com' },
+							{ name: 'Apple Inc.', domain: 'apple.com' },
+							{ name: 'Google', domain: 'google.com' },
+						],
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: { type: ['businesses'], match: [true] },
+					hide: { enrichment: ['website_keywords'] },
 				},
-				null,
-				2,
-			),
-			'prospect-linkedin_posts': JSON.stringify(
-				{
-					prospect_ids: [
-						'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-						'4c485f009d59e319dc039cdf3e935b85014e6a33',
-						'fd4c46716295a2e4731417eee802a883280e4d57',
-						'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
-					],
+			},
+			{
+				description: 'Enrich businesses using business info (filter by website keywords)',
+				default: JSON.stringify(
+					{
+						businesses_to_match: [
+							{ name: 'Microsoft', domain: 'microsoft.com' },
+							{ name: 'Apple Inc.', domain: 'apple.com' },
+							{ name: 'Google', domain: 'google.com' },
+						],
+						parameters: {
+							keywords: ['software', 'cloud'],
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						match: [false],
+						enrichment: ['website_keywords'],
+					},
 				},
-				null,
-				2,
-			),
-			'prospect-profiles': JSON.stringify(
-				{
-					prospect_ids: [
-						'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-						'4c485f009d59e319dc039cdf3e935b85014e6a33',
-						'fd4c46716295a2e4731417eee802a883280e4d57',
-						'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
-					],
-				},
-				null,
-				2,
-			),
-		},
+			},
+			{
+				description: 'Enrich prospects using prospect Explorium IDs',
+				default: JSON.stringify(
+					{
+						prospect_ids: [
+							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+							'4c485f009d59e319dc039cdf3e935b85014e6a33',
+							'fd4c46716295a2e4731417eee802a883280e4d57',
+							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
+						],
+					},
+					null,
+					2,
+				),
+				displayOptions: { show: { type: ['prospects'], match: [false] } },
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -437,7 +449,7 @@ export const operations = {
 				displayOptions: { show: { type: ['businesses'], match: [true] } },
 				options: [
 					{
-						name: 'businesses',
+						name: 'businesses_to_match',
 						displayName: 'Businesses',
 						values: [
 							{
@@ -473,7 +485,7 @@ export const operations = {
 				displayOptions: { show: { type: ['prospects'], match: [true] } },
 				options: [
 					{
-						name: 'prospects',
+						name: 'prospects_to_match',
 						displayName: 'Prospects',
 						values: [
 							{
@@ -531,7 +543,7 @@ export const operations = {
 			// ID fields when not matching - using fixedCollection
 			{
 				displayName: 'Business IDs',
-				name: 'business_ids_collection',
+				name: 'business_ids',
 				type: 'fixedCollection',
 				default: {},
 				typeOptions: {
@@ -541,18 +553,11 @@ export const operations = {
 				displayOptions: { show: { type: ['businesses'], match: [false] } },
 				options: [
 					{
+						displayName: 'Explorium Business ID',
 						name: 'business_ids',
-						displayName: 'Business IDs',
-						values: [
-							{
-								displayName: 'Business ID',
-								name: 'id',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
-								description: 'Explorium business ID',
-							},
-						],
+						type: 'string',
+						default: '',
+						placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
 					},
 				],
 			},
@@ -599,37 +604,54 @@ export const operations = {
 	fetch: {
 		displayName: 'Fetch',
 		description: 'Retrieve records with filters and pagination',
-		examples: {
-			businesses: JSON.stringify(
-				{
-					mode: 'preview',
-					filters: {
-						country_code: { values: ['US'] },
-						company_size: { values: ['1-10'] },
+		examples: [
+			{
+				description: 'Fetch businesses with filters for country and company size in preview mode',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						filters: {
+							country_code: { values: ['US'] },
+							company_size: { values: ['1-10'] },
+						},
+						size: 1000,
+						page_size: 5,
+						page: 1,
 					},
-					size: 1000,
-					page_size: 5,
-					page: 1,
-				},
-				null,
-				2,
-			),
-			prospects: JSON.stringify(
-				{
-					mode: 'preview',
-					filters: {
-						has_email: { value: true },
-						job_level: { values: ['cxo'] },
-						business_id: { values: ['a34bacf839b923770b2c360eefa26748'] },
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
 					},
-					size: 1000,
-					page_size: 5,
-					page: 1,
 				},
-				null,
-				2,
-			),
-		},
+			},
+			{
+				description:
+					'Fetch prospects with filters for email presence and job level in preview mode',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						filters: {
+							has_email: { value: true },
+							job_level: { values: ['cxo'] },
+							business_id: { values: ['a34bacf839b923770b2c360eefa26748'] },
+						},
+						size: 1000,
+						page_size: 5,
+						page: 1,
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+					},
+				},
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -673,31 +695,48 @@ export const operations = {
 	events: {
 		displayName: 'Events',
 		description: 'Get business or prospect events',
-		examples: {
-			businesses: JSON.stringify(
-				{
-					business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-					event_types: ['ipo_announcement', 'new_funding_round'],
-					timestamp_from: '2024-01-01',
+		examples: [
+			{
+				description:
+					'Get business events like IPO announcements and funding rounds using business IDs',
+				default: JSON.stringify(
+					{
+						business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
+						event_types: ['ipo_announcement', 'new_funding_round'],
+						timestamp_from: '2024-01-01',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+					},
 				},
-				null,
-				2,
-			),
-			prospects: JSON.stringify(
-				{
-					event_types: ['prospect_changed_role', 'prospect_changed_company'],
-					prospect_ids: [
-						'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-						'4c485f009d59e319dc039cdf3e935b85014e6a33',
-						'fd4c46716295a2e4731417eee802a883280e4d57',
-						'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
-					],
-					timestamp_from: '2024-01-01',
+			},
+			{
+				description: 'Get prospect events like role changes and company changes using prospect IDs',
+				default: JSON.stringify(
+					{
+						event_types: ['prospect_changed_role', 'prospect_changed_company'],
+						prospect_ids: [
+							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+							'4c485f009d59e319dc039cdf3e935b85014e6a33',
+							'fd4c46716295a2e4731417eee802a883280e4d57',
+							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
+						],
+						timestamp_from: '2024-01-01',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+					},
 				},
-				null,
-				2,
-			),
-		},
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -826,7 +865,7 @@ export const operations = {
 			// ID fields when not matching - using fixedCollection
 			{
 				displayName: 'Business IDs',
-				name: 'business_ids_collection',
+				name: 'business_ids',
 				type: 'fixedCollection',
 				default: {},
 				typeOptions: {
@@ -916,16 +955,24 @@ export const operations = {
 	autocomplete: {
 		displayName: 'Autocomplete',
 		description: 'Get field suggestions and autocomplete values',
-		examples: {
-			default: JSON.stringify(
-				{
-					field: 'google_category',
-					query: 'software',
+		examples: [
+			{
+				description: 'Get autocomplete suggestions for a specific field using a search query',
+				default: JSON.stringify(
+					{
+						field: 'google_category',
+						query: 'software',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						field: ['google_category'],
+					},
 				},
-				null,
-				2,
-			),
-		},
+			},
+		],
 		properties: [
 			{
 				displayName: 'Field',
@@ -954,7 +1001,7 @@ export type OperationKey = keyof typeof operations;
 export type StreamlinedOperation = {
 	displayName: string;
 	description: string;
-	examples?: { [key: string]: string };
+	examples?: JsonExample[];
 	properties: INodeProperties[];
 };
 

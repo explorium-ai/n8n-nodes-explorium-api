@@ -1,9 +1,9 @@
-export interface BusinessToMatch {
-	businesses: Business[];
+export interface BusinessesToMatch {
+	businesses_to_match: Business[];
 }
 
-export interface ProspectToMatch {
-	prospects: Prospect[];
+export interface ProspectsToMatch {
+	prospects_to_match: Prospect[];
 }
 
 export interface Business {
@@ -20,18 +20,10 @@ export interface Prospect {
 	business_id: string;
 }
 
-export interface BusinessIdCollection {
-	business_ids: BusinessId[];
+export interface BusinessIds {
+	business_ids: string[];
 }
 
-export interface ProspectIdCollection {
-	prospect_ids: ProspectId[];
-}
-
-export interface BusinessId {
-	id: string;
-}
-
-export interface ProspectId {
-	id: string;
+export interface ProspectIds {
+	prospect_ids: string[];
 }

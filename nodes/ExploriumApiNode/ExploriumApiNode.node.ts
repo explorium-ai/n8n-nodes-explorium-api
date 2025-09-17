@@ -9,48 +9,8 @@ import {
 } from 'n8n-workflow';
 
 import { enrichmentEndpoints, OperationKey, operations } from './operations';
-import {
-	BusinessToMatch,
-	ProspectToMatch,
-	BusinessIdCollection,
-	ProspectIdCollection,
-} from './types';
+import { BusinessesToMatch, ProspectsToMatch, BusinessIds, ProspectIds } from './types';
 import { excludeEmptyValues } from './utils';
-
-// Default JSON examples for each operation
-function getDefaultJsonExample(operation: OperationKey): string {
-	const operationConfig = operations[operation];
-
-	if (!operationConfig.examples) {
-		return '{}';
-	}
-
-	const examples = operationConfig.examples as Record<string, string>;
-
-	// For operations with simple examples, return the default one
-	if (examples.default) {
-		return examples.default;
-	}
-
-	// For match operation, default to business example
-	if (operation === 'match') {
-		return examples.business || '{}';
-	}
-
-	// For enrich operation, default to business firmographics
-	if (operation === 'enrich') {
-		return examples['business-firmographics'] || '{}';
-	}
-
-	// For fetch and events, default to businesses
-	if (operation === 'fetch' || operation === 'events') {
-		return examples.businesses || '{}';
-	}
-
-	// Fallback to first available example
-	const firstExample = Object.values(examples)[0];
-	return firstExample || '{}';
-}
 
 export class ExploriumApiNode implements INodeType {
 	description: INodeTypeDescription = {
@@ -113,38 +73,38 @@ export class ExploriumApiNode implements INodeType {
 				description: 'Whether to use direct JSON input instead of form fields',
 			},
 			// Dynamic JSON input fields for each operation
-			...Object.keys(operations).map(
-				(operationKey) =>
-					({
+			...Object.keys(operations).reduce((acc, operationKey) => {
+				const examples = operations[operationKey as OperationKey].examples;
+				for (const example of examples) {
+					const { default: exampleDefault, description } = example;
+
+					acc.push({
 						displayName: 'JSON Input',
 						name: 'jsonInput',
 						type: 'json',
-						default: getDefaultJsonExample(operationKey as OperationKey),
-						description:
-							'Raw JSON request body for the API call. Modify the example below as needed.',
+						default: exampleDefault,
+						description,
 						displayOptions: {
 							show: {
+								...example.displayOptions.show,
 								useJsonInput: [true],
 								operation: [operationKey],
 							},
+							hide: 'hide' in example.displayOptions ? example.displayOptions.hide : {},
 						},
 						typeOptions: { rows: 12 },
-					}) as INodeProperties,
-			),
+					});
+				}
+				return acc;
+			}, [] as INodeProperties[]),
 		],
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as OperationKey;
-		const useJsonInput = this.getNodeParameter('useJsonInput', 0, false) as boolean;
 
 		try {
-			// Handle JSON input mode
-			if (useJsonInput) {
-				return await executeJsonInput(this, operation);
-			}
-
 			// Handle streamlined operations
 			switch (operation) {
 				case 'match':
@@ -174,133 +134,124 @@ export class ExploriumApiNode implements INodeType {
 	}
 }
 
-// External execution functions
+// async function executeJsonInput(
+// 	executeFunctions: IExecuteFunctions,
+// 	operation: OperationKey,
+// ): Promise<INodeExecutionData[][]> {
+// 	const returnData: INodeExecutionData[] = [];
+// 	const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
 
-// Helper function to execute matching using fixedCollection data
-async function executeMatchFromFixedCollection(
-	executeFunctions: IExecuteFunctions,
-	type: 'businesses' | 'prospects',
-): Promise<INodeExecutionData[][]> {
-	if (type === 'businesses') {
-		const result = await executeMatch(executeFunctions);
-		return result;
-	} else {
-		const result = await executeMatch(executeFunctions);
-		return result;
-	}
-}
+// 	let body: Record<string, any>;
+// 	try {
+// 		body = typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
+// 	} catch (error) {
+// 		throw new NodeOperationError(
+// 			executeFunctions.getNode(),
+// 			'Invalid JSON format in JSON Input field',
+// 		);
+// 	}
 
-async function executeJsonInput(
-	executeFunctions: IExecuteFunctions,
-	operation: OperationKey,
-): Promise<INodeExecutionData[][]> {
-	const returnData: INodeExecutionData[] = [];
-	const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+// 	// Determine endpoint and method based on operation
+// 	let endpoint: string;
+// 	let method: 'GET' | 'POST' = 'POST';
+// 	let qs: Record<string, any> | undefined;
 
-	let body: Record<string, any>;
-	try {
-		body = typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
-	} catch (error) {
-		throw new NodeOperationError(
-			executeFunctions.getNode(),
-			'Invalid JSON format in JSON Input field',
-		);
-	}
+// 	switch (operation) {
+// 		case 'match':
+// 			// Auto-detect if it's business or prospect match based on the input
+// 			if (body.businesses_to_match) {
+// 				endpoint = '/v1/businesses/match';
+// 			} else if (body.prospects_to_match) {
+// 				endpoint = '/v1/prospects/match';
+// 			} else {
+// 				throw new NodeOperationError(
+// 					executeFunctions.getNode(),
+// 					'JSON input must contain either "businesses_to_match" or "prospects_to_match"',
+// 				);
+// 			}
+// 			break;
+// 		case 'fetch':
+// 			// Auto-detect if it's businesses or prospects based on filters or explicit mode
+// 			if (body.mode && body.mode.includes('prospect')) {
+// 				endpoint = '/v1/prospects';
+// 			} else {
+// 				endpoint = '/v1/businesses';
+// 			}
+// 			break;
+// 		case 'events':
+// 			// Auto-detect based on the ID field used
+// 			if (body.business_ids) {
+// 				endpoint = '/v1/businesses/events';
+// 			} else if (body.prospect_ids) {
+// 				endpoint = '/v1/prospects/events';
+// 			} else {
+// 				throw new NodeOperationError(
+// 					executeFunctions.getNode(),
+// 					'JSON input must contain either "business_ids" or "prospect_ids"',
+// 				);
+// 			}
+// 			break;
+// 		case 'enrich':
+// 			// For enrichment, we need to determine the specific endpoint from the enrichment type
+// 			// Since we can't determine this from JSON alone, use the most common one
+// 			if (body.business_ids) {
+// 				endpoint = '/v1/businesses/firmographics/bulk_enrich';
+// 			} else if (body.prospect_ids) {
+// 				endpoint = '/v1/prospects/contacts_information/bulk_enrich';
+// 			} else {
+// 				throw new NodeOperationError(
+// 					executeFunctions.getNode(),
+// 					'JSON input must contain either "business_ids" or "prospect_ids"',
+// 				);
+// 			}
+// 			break;
+// 		case 'autocomplete':
+// 			endpoint = '/v1/businesses/autocomplete';
+// 			method = 'GET';
+// 			qs = body;
+// 			body = undefined as any;
+// 			break;
+// 		default:
+// 			throw new NodeOperationError(executeFunctions.getNode(), `Unknown operation: ${operation}`);
+// 	}
 
-	// Determine endpoint and method based on operation
-	let endpoint: string;
-	let method: 'GET' | 'POST' = 'POST';
-	let qs: Record<string, any> | undefined;
+// 	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+// 		executeFunctions,
+// 		'exploriumApi',
+// 		{
+// 			method,
+// 			url: `https://api.explorium.ai${endpoint}`,
+// 			body,
+// 			qs,
+// 			json: true,
+// 		},
+// 	);
 
-	switch (operation) {
-		case 'match':
-			// Auto-detect if it's business or prospect match based on the input
-			if (body.businesses_to_match) {
-				endpoint = '/v1/businesses/match';
-			} else if (body.prospects_to_match) {
-				endpoint = '/v1/prospects/match';
-			} else {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'JSON input must contain either "businesses_to_match" or "prospects_to_match"',
-				);
-			}
-			break;
-		case 'fetch':
-			// Auto-detect if it's businesses or prospects based on filters or explicit mode
-			if (body.mode && body.mode.includes('prospect')) {
-				endpoint = '/v1/prospects';
-			} else {
-				endpoint = '/v1/businesses';
-			}
-			break;
-		case 'events':
-			// Auto-detect based on the ID field used
-			if (body.business_ids) {
-				endpoint = '/v1/businesses/events';
-			} else if (body.prospect_ids) {
-				endpoint = '/v1/prospects/events';
-			} else {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'JSON input must contain either "business_ids" or "prospect_ids"',
-				);
-			}
-			break;
-		case 'enrich':
-			// For enrichment, we need to determine the specific endpoint from the enrichment type
-			// Since we can't determine this from JSON alone, use the most common one
-			if (body.business_ids) {
-				endpoint = '/v1/businesses/firmographics/bulk_enrich';
-			} else if (body.prospect_ids) {
-				endpoint = '/v1/prospects/contacts_information/bulk_enrich';
-			} else {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'JSON input must contain either "business_ids" or "prospect_ids"',
-				);
-			}
-			break;
-		case 'autocomplete':
-			endpoint = '/v1/businesses/autocomplete';
-			method = 'GET';
-			qs = body;
-			body = undefined as any;
-			break;
-		default:
-			throw new NodeOperationError(executeFunctions.getNode(), `Unknown operation: ${operation}`);
-	}
-
-	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-		executeFunctions,
-		'exploriumApi',
-		{
-			method,
-			url: `https://api.explorium.ai${endpoint}`,
-			body,
-			qs,
-			json: true,
-		},
-	);
-
-	returnData.push({ json: response });
-	return [returnData];
-}
+// 	returnData.push({ json: response });
+// 	return [returnData];
+// }
 
 async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const returnData: INodeExecutionData[] = [];
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
+	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
 	let endpoint: string;
 	let requestBody: any;
 
 	if (type === 'businesses') {
 		endpoint = '/v1/businesses/match';
-		const businessesToMatch = executeFunctions.getNodeParameter('businesses_to_match', 0, {
-			businesses: [],
-		}) as BusinessToMatch;
+		let businessesToMatch: BusinessesToMatch;
 
-		const businessList = businessesToMatch.businesses || [];
+		if (useJsonInput) {
+			businessesToMatch = await extractJsonInput<BusinessesToMatch>(executeFunctions);
+		} else {
+			businessesToMatch = executeFunctions.getNodeParameter('businesses_to_match', 0, {
+				businesses: [],
+			}) as BusinessesToMatch;
+		}
+
+		const businessList = businessesToMatch.businesses_to_match || [];
 
 		// Validate that at least one company has name or domain
 		const validCompanies = businessList
@@ -319,11 +270,16 @@ async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeE
 		};
 	} else {
 		endpoint = '/v1/prospects/match';
-		const prospectsToMatch = executeFunctions.getNodeParameter('prospects_to_match', 0, {
-			prospects: [],
-		}) as ProspectToMatch;
+		let prospectsToMatch: ProspectsToMatch;
+		if (useJsonInput) {
+			prospectsToMatch = await extractJsonInput<ProspectsToMatch>(executeFunctions);
+		} else {
+			prospectsToMatch = executeFunctions.getNodeParameter('prospects_to_match', 0, {
+				prospects_to_match: [],
+			}) as ProspectsToMatch;
+		}
 
-		const prospectList = prospectsToMatch.prospects || [];
+		const prospectList = prospectsToMatch.prospects_to_match || [];
 
 		// Filter out prospects that have at least one identifier
 		const validProspects = prospectList
@@ -362,63 +318,52 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
 	const enrichments = executeFunctions.getNodeParameter('enrichment', 0) as string[];
 	const shouldMatch = executeFunctions.getNodeParameter('match', 0, false) as boolean;
+	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
-	let entityIds: string[] = [];
+	let body: (BusinessIds & { parameters?: { keywords: string[] } }) | ProspectIds;
 
 	// Get entity IDs (either by matching or from provided IDs)
 	if (shouldMatch) {
-		const matchResult = await executeMatchFromFixedCollection(executeFunctions, type);
+		const matchResult = await executeMatch(executeFunctions);
 		const matchData = matchResult[0][0].json as any;
 
 		if (type === 'businesses') {
-			entityIds = matchData.matched_businesses?.map((match: any) => match.business_id) || [];
+			body = {
+				business_ids: matchData.matched_businesses?.map((match: any) => match.business_id) || [],
+			};
 		} else {
-			entityIds = matchData.matched_prospects?.map((match: any) => match.prospect_id) || [];
+			body = {
+				prospect_ids: matchData.matched_prospects?.map((match: any) => match.prospect_id) || [],
+			};
 		}
+	} else if (useJsonInput) {
+		const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+		const jsonInputObject = JSON.parse(jsonInput);
+		body = jsonInputObject;
 	} else {
 		if (type === 'businesses') {
-			const businessIdsCollection = executeFunctions.getNodeParameter(
-				'business_ids_collection',
-				0,
-				{ business_ids: [] },
-			) as BusinessIdCollection;
-
-			const businessIdsList = businessIdsCollection.business_ids || [];
-			entityIds = businessIdsList
-				.map(excludeEmptyValues)
-				.filter((item) => item.id)
-				.map((item) => item.id);
-
-			if (entityIds.length === 0) {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'At least one business ID is required',
-				);
-			}
+			body = executeFunctions.getNodeParameter('business_ids', 0, {
+				business_ids: [],
+			}) as BusinessIds;
 		} else {
-			const prospectIdsCollection = executeFunctions.getNodeParameter(
-				'prospect_ids_collection',
-				0,
-				{ prospect_ids: [] },
-			) as ProspectIdCollection;
-
-			const prospectIdsList = prospectIdsCollection.prospect_ids || [];
-			entityIds = prospectIdsList
-				.map(excludeEmptyValues)
-				.filter((item) => item.id)
-				.map((item) => item.id);
-
-			if (entityIds.length === 0) {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'At least one prospect ID is required',
-				);
-			}
+			body = executeFunctions.getNodeParameter('prospect_ids', 0, {
+				prospect_ids: [],
+			}) as ProspectIds;
 		}
 	}
 
-	if (entityIds.length === 0) {
-		throw new NodeOperationError(executeFunctions.getNode(), 'No entity IDs found for enrichment');
+	if ('business_ids' in body && body.business_ids.filter(Boolean).length === 0) {
+		throw new NodeOperationError(
+			executeFunctions.getNode(),
+			'At least one business ID is required',
+		);
+	}
+
+	if ('prospect_ids' in body && body.prospect_ids.filter(Boolean).length === 0) {
+		throw new NodeOperationError(
+			executeFunctions.getNode(),
+			'At least one prospect ID is required',
+		);
 	}
 
 	// Process each enrichment type
@@ -433,15 +378,12 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			);
 		}
 
-		const requestBody: any = {};
-		requestBody[type === 'businesses' ? 'business_ids' : 'prospect_ids'] = entityIds;
-
 		// Add parameters for website keywords
-		if (enrichment === 'website_keywords') {
+		if ('business_ids' in body && enrichment === 'website_keywords') {
 			const keywords = executeFunctions.getNodeParameter('keywords', 0, '') as string;
 			if (keywords) {
 				try {
-					requestBody.parameters = { keywords: JSON.parse(keywords) };
+					(body as any).parameters = { keywords: JSON.parse(keywords) };
 				} catch {
 					throw new NodeOperationError(
 						executeFunctions.getNode(),
@@ -457,7 +399,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			{
 				method: 'POST',
 				url: `https://api.explorium.ai${endpoint}`,
-				body: requestBody,
+				body,
 				json: true,
 			},
 		);
@@ -527,7 +469,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 
 	// Get entity IDs (either by matching or from provided IDs)
 	if (shouldMatch) {
-		const matchResult = await executeMatchFromFixedCollection(executeFunctions, type);
+		const matchResult = await executeMatch(executeFunctions);
 		const matchData = matchResult[0][0].json as any;
 
 		if (type === 'businesses') {
@@ -537,17 +479,12 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 		}
 	} else {
 		if (type === 'businesses') {
-			const businessIdsCollection = executeFunctions.getNodeParameter(
-				'business_ids_collection',
-				0,
-				{ business_ids: [] },
-			) as BusinessIdCollection;
+			const businessIdsCollection = executeFunctions.getNodeParameter('business_ids', 0, {
+				business_ids: [],
+			}) as BusinessIds;
 
 			const businessIdsList = businessIdsCollection.business_ids || [];
-			entityIds = businessIdsList
-				.map(excludeEmptyValues)
-				.filter((item) => item.id)
-				.map((item) => item.id);
+			entityIds = businessIdsList;
 
 			if (entityIds.length === 0) {
 				throw new NodeOperationError(
@@ -560,13 +497,10 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 				'prospect_ids_collection',
 				0,
 				{ prospect_ids: [] },
-			) as ProspectIdCollection;
+			) as ProspectIds;
 
 			const prospectIdsList = prospectIdsCollection.prospect_ids || [];
-			entityIds = prospectIdsList
-				.map(excludeEmptyValues)
-				.filter((item) => item.id)
-				.map((item) => item.id);
+			entityIds = prospectIdsList;
 
 			if (entityIds.length === 0) {
 				throw new NodeOperationError(
@@ -632,4 +566,16 @@ async function executeAutocomplete(
 
 	returnData.push({ json: response });
 	return [returnData];
+}
+
+async function extractJsonInput<T>(executeFunctions: IExecuteFunctions): Promise<T> {
+	const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+	try {
+		return typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
+	} catch (error) {
+		throw new NodeOperationError(
+			executeFunctions.getNode(),
+			'Invalid JSON format in JSON Input field',
+		);
+	}
 }
