@@ -9,7 +9,12 @@ import {
 } from 'n8n-workflow';
 
 import { enrichmentEndpoints, OperationKey, operations } from './operations';
-import { BusinessToMatch, ProspectToMatch } from './types';
+import {
+	BusinessToMatch,
+	ProspectToMatch,
+	BusinessIdCollection,
+	ProspectIdCollection,
+} from './types';
 import { excludeEmptyValues } from './utils';
 
 // Default JSON examples for each operation
@@ -371,23 +376,44 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			entityIds = matchData.matched_prospects?.map((match: any) => match.prospect_id) || [];
 		}
 	} else {
-		const idsParam = type === 'businesses' ? 'business_ids' : 'prospect_ids';
-		const idsString = executeFunctions.getNodeParameter(idsParam, 0, '') as string;
+		if (type === 'businesses') {
+			const businessIdsCollection = executeFunctions.getNodeParameter(
+				'business_ids_collection',
+				0,
+				{ business_ids: [] },
+			) as BusinessIdCollection;
 
-		if (!idsString) {
-			throw new NodeOperationError(
-				executeFunctions.getNode(),
-				`${idsParam} is required when not matching first`,
-			);
-		}
+			const businessIdsList = businessIdsCollection.business_ids || [];
+			entityIds = businessIdsList
+				.map(excludeEmptyValues)
+				.filter((item) => item.id)
+				.map((item) => item.id);
 
-		try {
-			entityIds = JSON.parse(idsString);
-		} catch {
-			throw new NodeOperationError(
-				executeFunctions.getNode(),
-				`Invalid JSON format for ${idsParam}`,
-			);
+			if (entityIds.length === 0) {
+				throw new NodeOperationError(
+					executeFunctions.getNode(),
+					'At least one business ID is required',
+				);
+			}
+		} else {
+			const prospectIdsCollection = executeFunctions.getNodeParameter(
+				'prospect_ids_collection',
+				0,
+				{ prospect_ids: [] },
+			) as ProspectIdCollection;
+
+			const prospectIdsList = prospectIdsCollection.prospect_ids || [];
+			entityIds = prospectIdsList
+				.map(excludeEmptyValues)
+				.filter((item) => item.id)
+				.map((item) => item.id);
+
+			if (entityIds.length === 0) {
+				throw new NodeOperationError(
+					executeFunctions.getNode(),
+					'At least one prospect ID is required',
+				);
+			}
 		}
 	}
 
@@ -510,23 +536,44 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 			entityIds = matchData.matched_prospects?.map((match: any) => match.prospect_id) || [];
 		}
 	} else {
-		const idsParam = type === 'businesses' ? 'business_ids' : 'prospect_ids';
-		const idsString = executeFunctions.getNodeParameter(idsParam, 0, '') as string;
+		if (type === 'businesses') {
+			const businessIdsCollection = executeFunctions.getNodeParameter(
+				'business_ids_collection',
+				0,
+				{ business_ids: [] },
+			) as BusinessIdCollection;
 
-		if (!idsString) {
-			throw new NodeOperationError(
-				executeFunctions.getNode(),
-				`${idsParam} is required when not matching first`,
-			);
-		}
+			const businessIdsList = businessIdsCollection.business_ids || [];
+			entityIds = businessIdsList
+				.map(excludeEmptyValues)
+				.filter((item) => item.id)
+				.map((item) => item.id);
 
-		try {
-			entityIds = JSON.parse(idsString);
-		} catch {
-			throw new NodeOperationError(
-				executeFunctions.getNode(),
-				`Invalid JSON format for ${idsParam}`,
-			);
+			if (entityIds.length === 0) {
+				throw new NodeOperationError(
+					executeFunctions.getNode(),
+					'At least one business ID is required when not matching first',
+				);
+			}
+		} else {
+			const prospectIdsCollection = executeFunctions.getNodeParameter(
+				'prospect_ids_collection',
+				0,
+				{ prospect_ids: [] },
+			) as ProspectIdCollection;
+
+			const prospectIdsList = prospectIdsCollection.prospect_ids || [];
+			entityIds = prospectIdsList
+				.map(excludeEmptyValues)
+				.filter((item) => item.id)
+				.map((item) => item.id);
+
+			if (entityIds.length === 0) {
+				throw new NodeOperationError(
+					executeFunctions.getNode(),
+					'At least one prospect ID is required when not matching first',
+				);
+			}
 		}
 	}
 

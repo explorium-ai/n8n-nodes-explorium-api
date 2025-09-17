@@ -528,24 +528,60 @@ export const operations = {
 					},
 				],
 			},
-			// ID fields when not matching
+			// ID fields when not matching - using fixedCollection
 			{
 				displayName: 'Business IDs',
-				name: 'business_ids',
-				type: 'string',
-				default: '',
-				placeholder: 'e.g., ["id1", "id2", "id3"]',
-				description: 'JSON array of business IDs to enrich',
+				name: 'business_ids_collection',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add business IDs to enrich',
 				displayOptions: { show: { type: ['businesses'], match: [false] } },
+				options: [
+					{
+						name: 'business_ids',
+						displayName: 'Business IDs',
+						values: [
+							{
+								displayName: 'Business ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+								description: 'Explorium business ID',
+							},
+						],
+					},
+				],
 			},
 			{
 				displayName: 'Prospect IDs',
-				name: 'prospect_ids',
-				type: 'string',
-				default: '',
-				placeholder: 'e.g., ["id1", "id2", "id3"]',
-				description: 'JSON array of prospect IDs to enrich',
+				name: 'prospect_ids_collection',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add prospect IDs to enrich',
 				displayOptions: { show: { type: ['prospects'], match: [false] } },
+				options: [
+					{
+						name: 'prospect_ids',
+						displayName: 'Prospect IDs',
+						values: [
+							{
+								displayName: 'Prospect ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g., 20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+								description: 'Explorium prospect ID',
+							},
+						],
+					},
+				],
 			},
 			// Website keywords parameter
 			{
@@ -787,24 +823,60 @@ export const operations = {
 					},
 				],
 			},
-			// ID fields when not matching
+			// ID fields when not matching - using fixedCollection
 			{
 				displayName: 'Business IDs',
-				name: 'business_ids',
-				type: 'string',
-				default: '',
-				placeholder: 'e.g., ["id1", "id2", "id3"]',
-				description: 'JSON array of business IDs',
+				name: 'business_ids_collection',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add business IDs for events',
 				displayOptions: { show: { type: ['businesses'], match: [false] } },
+				options: [
+					{
+						name: 'business_ids',
+						displayName: 'Business IDs',
+						values: [
+							{
+								displayName: 'Business ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+								description: 'Explorium business ID',
+							},
+						],
+					},
+				],
 			},
 			{
 				displayName: 'Prospect IDs',
-				name: 'prospect_ids',
-				type: 'string',
-				default: '',
-				placeholder: 'e.g., ["id1", "id2", "id3"]',
-				description: 'JSON array of prospect IDs',
+				name: 'prospect_ids_collection',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add prospect IDs for events',
 				displayOptions: { show: { type: ['prospects'], match: [false] } },
+				options: [
+					{
+						name: 'prospect_ids',
+						displayName: 'Prospect IDs',
+						values: [
+							{
+								displayName: 'Prospect ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g., 20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+								description: 'Explorium prospect ID',
+							},
+						],
+					},
+				],
 			},
 			// Event types
 			{

@@ -19,3 +19,19 @@ export interface Prospect {
 	linkedin: string;
 	business_id: string;
 }
+
+export interface BusinessIdCollection {
+	business_ids: BusinessId[];
+}
+
+export interface ProspectIdCollection {
+	prospect_ids: ProspectId[];
+}
+
+export interface BusinessId {
+	id: string;
+}
+
+export interface ProspectId {
+	id: string;
+}
