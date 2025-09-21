@@ -1,0 +1,109 @@
+// Business enrichment options
+export const businessEnrichmentOptions = [
+	{
+		name: 'Firmographics',
+		value: 'firmographics',
+		description: 'Company size, industry, location',
+	},
+	{ name: 'Technographics', value: 'technographics', description: 'Technology stack and tools' },
+	{
+		name: 'Company Ratings',
+		value: 'company_ratings',
+		description: 'Employee ratings and reviews',
+	},
+	{
+		name: 'Financial Metrics',
+		value: 'financial_metrics',
+		description: 'Financial indicators for public companies',
+	},
+	{
+		name: 'Funding & Acquisitions',
+		value: 'funding_and_acquisitions',
+		description: 'Investment and acquisition history',
+	},
+	{ name: 'Business Challenges', value: 'challenges', description: 'Challenges from SEC filings' },
+	{
+		name: 'Competitive Landscape',
+		value: 'competitive_landscape',
+		description: 'Competitive insights from SEC filings',
+	},
+	{
+		name: 'Strategic Insights',
+		value: 'strategic_insights',
+		description: 'Strategic insights from SEC filings',
+	},
+	{
+		name: 'Workforce Trends',
+		value: 'workforce_trends',
+		description: 'Department composition and trends',
+	},
+	{ name: 'LinkedIn Posts', value: 'linkedin_posts', description: 'Company LinkedIn activity' },
+	{ name: 'Website Changes', value: 'website_changes', description: 'Website content changes' },
+	{
+		name: 'Website Keywords',
+		value: 'website_keywords',
+		description: 'Keyword search on websites',
+	},
+];
+
+// Prospect enrichment options
+export const prospectEnrichmentOptions = [
+	{
+		name: 'Contact Information',
+		value: 'contacts',
+		description: 'Email, phone, and contact details',
+	},
+	{ name: 'LinkedIn Posts', value: 'linkedin_posts', description: 'Individual LinkedIn activity' },
+	{
+		name: 'Professional Profile',
+		value: 'profiles',
+		description: 'Detailed professional information',
+	},
+];
+
+// Business event types
+export const businessEventTypes = [
+	{ name: 'IPO Announcement', value: 'ipo_announcement' },
+	{ name: 'New Funding Round', value: 'new_funding_round' },
+	{ name: 'Acquisition', value: 'acquisition' },
+	{ name: 'Executive Changes', value: 'executive_changes' },
+];
+
+// Prospect event types
+export const prospectEventTypes = [
+	{ name: 'Role Change', value: 'prospect_changed_role' },
+	{ name: 'Company Change', value: 'prospect_changed_company' },
+	{ name: 'New Position', value: 'new_position' },
+];
+
+// Autocomplete field options
+export const autocompleteFields = [
+	{ name: 'Google Category', value: 'google_category' },
+	{ name: 'Industry', value: 'industry' },
+	{ name: 'Technology', value: 'technology' },
+	{ name: 'Location', value: 'location' },
+	{ name: 'Company Size', value: 'company_size' },
+];
+
+// Mapping enrichment types to endpoints
+export const enrichmentEndpoints = {
+	businesses: {
+		firmographics: '/v1/businesses/firmographics/bulk_enrich',
+		technographics: '/v1/businesses/technographics/bulk_enrich',
+		company_ratings: '/v1/businesses/company_ratings_by_employees/bulk_enrich',
+		financial_metrics: '/v1/businesses/financial_indicators/bulk_enrich',
+		funding_and_acquisitions: '/v1/businesses/funding_and_acquisition/bulk_enrich',
+		challenges: '/v1/businesses/pc_business_challenges_10k/bulk_enrich',
+		competitive_landscape: '/v1/businesses/pc_competitive_landscape_10k/bulk_enrich',
+		strategic_insights: '/v1/businesses/pc_strategy_10k/bulk_enrich',
+		workforce_trends: '/v1/businesses/workforce_trends/bulk_enrich',
+		linkedin_posts: '/v1/businesses/linkedin_posts/bulk_enrich',
+		website_changes: '/v1/businesses/website_changes/bulk_enrich',
+		website_keywords: '/v1/businesses/company_website_keywords/bulk_enrich',
+	},
+	prospects: {
+		contacts: '/v1/prospects/contacts_information/bulk_enrich',
+		linkedin_posts: '/v1/prospects/linkedin_posts/bulk_enrich',
+		profiles: '/v1/prospects/profiles/bulk_enrich',
+	},
+};

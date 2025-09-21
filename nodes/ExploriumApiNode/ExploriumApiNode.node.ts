@@ -8,7 +8,7 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-import { enrichmentEndpoints, OperationKey, operations } from './operations';
+import { OperationKey, operations } from './operations';
 import {
 	BusinessesToMatch,
 	ProspectsToMatch,
@@ -18,6 +18,7 @@ import {
 	ProspectIds_Body,
 } from './types';
 import { excludeEmptyValues } from './utils';
+import { enrichmentEndpoints } from './constants';
 
 export class ExploriumApiNode implements INodeType {
 	description: INodeTypeDescription = {
@@ -48,26 +49,14 @@ export class ExploriumApiNode implements INodeType {
 			// Dynamic properties based on operation
 			...Object.entries(operations).flatMap(([operationKey, operationConfig]) =>
 				operationConfig.properties.map((property) => {
-					const prop = property as any;
-					const displayOptions: any = {
-						show: {
-							operation: [operationKey],
-						},
-					};
-
-					// Merge existing displayOptions.show
-					if (prop.displayOptions?.show) {
-						Object.assign(displayOptions.show, prop.displayOptions.show);
-					}
-
-					// Add hide options if they exist
-					if (prop.displayOptions?.hide) {
-						displayOptions.hide = prop.displayOptions.hide;
-					}
-
 					return {
 						...property,
-						displayOptions,
+						displayOptions: {
+							show: {
+								operation: [operationKey],
+								...('displayOptions' in property && property.displayOptions?.show),
+							},
+						},
 					} as INodeProperties;
 				}),
 			),
@@ -442,28 +431,216 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const returnData: INodeExecutionData[] = [];
 	const type = executeFunctions.getNodeParameter('type', 0) as string;
-	const filtersString = executeFunctions.getNodeParameter('filters', 0, '{}') as string;
-	const pageSize = executeFunctions.getNodeParameter('page_size', 0, 10) as number;
-	const nextCursor = executeFunctions.getNodeParameter('next_cursor', 0, '') as string;
+	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
-	let filters: any;
-	try {
-		filters = typeof filtersString === 'string' ? JSON.parse(filtersString) : filtersString;
-	} catch {
-		throw new NodeOperationError(executeFunctions.getNode(), 'Invalid JSON format for filters');
+	let requestBody: any;
+
+	if (useJsonInput) {
+		// Use JSON input directly
+		const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+		requestBody = JSON.parse(jsonInput);
+	} else {
+		// Get pagination and mode parameters
+		const mode = executeFunctions.getNodeParameter('mode', 0, 'preview') as string;
+		const size = executeFunctions.getNodeParameter('size', 0, 20) as number;
+		const pageSize = executeFunctions.getNodeParameter('page_size', 0, 100) as number;
+		const page = executeFunctions.getNodeParameter('page', 0, 1) as number;
+
+		// Build filters object from individual parameters
+		const filters: any = {};
+
+		// Helper function to get collection values
+		const getCollectionValues = (paramName: string, valueKey: string) => {
+			const collection = executeFunctions.getNodeParameter(paramName, 0, {}) as any;
+			const collectionArray = collection[paramName] || [];
+			return collectionArray.map((item: any) => item[valueKey]).filter(Boolean);
+		};
+
+		if (type === 'businesses') {
+			// Country codes
+			const countryCodes = getCollectionValues('country_code', 'code');
+			if (countryCodes.length > 0) {
+				filters.country_code = { values: countryCodes };
+			}
+
+			// Region country codes
+			const regionCodes = getCollectionValues('region_country_code', 'code');
+			if (regionCodes.length > 0) {
+				filters.region_country_code = { values: regionCodes };
+			}
+
+			// Cities
+			const cities = getCollectionValues('city_region_country', 'location');
+			if (cities.length > 0) {
+				filters.city_region_country = { values: cities };
+			}
+
+			// Company sizes
+			const companySizes = getCollectionValues('company_size', 'size');
+			if (companySizes.length > 0) {
+				filters.company_size = { values: companySizes };
+			}
+
+			// Company revenue
+			const companyRevenue = getCollectionValues('company_revenue', 'range');
+			if (companyRevenue.length > 0) {
+				filters.company_revenue = { values: companyRevenue };
+			}
+
+			// Company age
+			const companyAge = getCollectionValues('company_age', 'range');
+			if (companyAge.length > 0) {
+				filters.company_age = { values: companyAge };
+			}
+
+			// Google categories
+			const googleCategories = getCollectionValues('google_category', 'category');
+			if (googleCategories.length > 0) {
+				filters.google_category = { values: googleCategories };
+			}
+
+			// NAICS categories
+			const naicsCategories = getCollectionValues('naics_category', 'code');
+			if (naicsCategories.length > 0) {
+				filters.naics_category = { values: naicsCategories };
+			}
+
+			// LinkedIn categories
+			const linkedinCategories = getCollectionValues('linkedin_category', 'category');
+			if (linkedinCategories.length > 0) {
+				filters.linkedin_category = { values: linkedinCategories };
+			}
+
+			// Tech stack categories
+			const techStackCategories = getCollectionValues('company_tech_stack_category', 'category');
+			if (techStackCategories.length > 0) {
+				filters.company_tech_stack_category = { values: techStackCategories };
+			}
+
+			// Technologies
+			const technologies = getCollectionValues('company_tech_stack_tech', 'tech');
+			if (technologies.length > 0) {
+				filters.company_tech_stack_tech = { values: technologies };
+			}
+
+			// Company names
+			const companyNames = getCollectionValues('company_name', 'name');
+			if (companyNames.length > 0) {
+				filters.company_name = { values: companyNames };
+			}
+
+			// Number of locations
+			const locationCounts = getCollectionValues('number_of_locations', 'range');
+			if (locationCounts.length > 0) {
+				filters.number_of_locations = { values: locationCounts };
+			}
+
+			// Website keywords
+			const websiteKeywords = getCollectionValues('website_keywords', 'keyword');
+			if (websiteKeywords.length > 0) {
+				filters.website_keywords = { values: websiteKeywords };
+			}
+		}
+
+		if (type === 'prospects') {
+			// Business IDs
+			const businessIds = getCollectionValues('business_id', 'id');
+			if (businessIds.length > 0) {
+				filters.business_id = { values: businessIds };
+			}
+
+			// Job levels
+			const jobLevels = getCollectionValues('job_level', 'level');
+			if (jobLevels.length > 0) {
+				filters.job_level = { values: jobLevels };
+			}
+
+			// Job departments
+			const jobDepartments = getCollectionValues('job_department', 'department');
+			if (jobDepartments.length > 0) {
+				filters.job_department = { values: jobDepartments };
+			}
+
+			// Has email - boolean field
+			const hasEmail = executeFunctions.getNodeParameter('has_email', 0, true) as boolean;
+			if (hasEmail !== undefined) {
+				filters.has_email = { value: hasEmail };
+			}
+
+			// Has phone - boolean field
+			const hasPhone = executeFunctions.getNodeParameter('has_phone_number', 0, false) as boolean;
+			if (hasPhone !== undefined) {
+				filters.has_phone_number = { value: hasPhone };
+			}
+
+			// Prospect country codes
+			const prospectCountryCodes = getCollectionValues('country_code_prospect', 'code');
+			if (prospectCountryCodes.length > 0) {
+				filters.country_code = { values: prospectCountryCodes };
+			}
+
+			// Company country codes
+			const companyCountryCodes = getCollectionValues('company_country_code', 'code');
+			if (companyCountryCodes.length > 0) {
+				filters.company_country_code = { values: companyCountryCodes };
+			}
+
+			// Company sizes for prospects
+			const companySizesProspects = getCollectionValues('company_size_prospects', 'size');
+			if (companySizesProspects.length > 0) {
+				filters.company_size = { values: companySizesProspects };
+			}
+
+			// Company revenue for prospects
+			const companyRevenueProspects = getCollectionValues('company_revenue_prospects', 'range');
+			if (companyRevenueProspects.length > 0) {
+				filters.company_revenue = { values: companyRevenueProspects };
+			}
+		}
+
+		// Additional filters from JSON
+		const additionalFiltersString = executeFunctions.getNodeParameter(
+			'additional_filters',
+			0,
+			'{}',
+		) as string;
+		let additionalFilters: any = {};
+		try {
+			additionalFilters =
+				typeof additionalFiltersString === 'string'
+					? JSON.parse(additionalFiltersString)
+					: additionalFiltersString;
+		} catch {
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				'Invalid JSON format for additional filters',
+			);
+		}
+
+		// Merge additional filters
+		Object.assign(filters, additionalFilters);
+
+		requestBody = {
+			mode,
+			size,
+			page_size: pageSize,
+			page,
+			filters,
+		};
+
+		// Get exclude collection for businesses
+		if (type === 'businesses') {
+			const excludeCollection = executeFunctions.getNodeParameter('exclude', 0, {}) as any;
+			const excludeArray = excludeCollection.exclude || [];
+			const excludeIds = excludeArray.map((item: any) => item.id).filter(Boolean);
+
+			if (excludeIds.length > 0) {
+				requestBody.exclude = excludeIds;
+			}
+		}
 	}
 
 	const endpoint = type === 'businesses' ? '/v1/businesses' : '/v1/prospects';
-
-	const requestBody: any = {
-		mode: 'preview',
-		filters,
-		page_size: pageSize,
-	};
-
-	if (nextCursor) {
-		requestBody.next_cursor = nextCursor;
-	}
 
 	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
 		executeFunctions,

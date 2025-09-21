@@ -1,106 +1,141 @@
 import { INodeProperties } from 'n8n-workflow';
-
-// Business enrichment options
-export const businessEnrichmentOptions = [
-	{
-		name: 'Firmographics',
-		value: 'firmographics',
-		description: 'Company size, industry, location',
-	},
-	{ name: 'Technographics', value: 'technographics', description: 'Technology stack and tools' },
-	{
-		name: 'Company Ratings',
-		value: 'company_ratings',
-		description: 'Employee ratings and reviews',
-	},
-	{
-		name: 'Financial Metrics',
-		value: 'financial_metrics',
-		description: 'Financial indicators for public companies',
-	},
-	{
-		name: 'Funding & Acquisitions',
-		value: 'funding_and_acquisitions',
-		description: 'Investment and acquisition history',
-	},
-	{ name: 'Business Challenges', value: 'challenges', description: 'Challenges from SEC filings' },
-	{
-		name: 'Competitive Landscape',
-		value: 'competitive_landscape',
-		description: 'Competitive insights from SEC filings',
-	},
-	{
-		name: 'Strategic Insights',
-		value: 'strategic_insights',
-		description: 'Strategic insights from SEC filings',
-	},
-	{
-		name: 'Workforce Trends',
-		value: 'workforce_trends',
-		description: 'Department composition and trends',
-	},
-	{ name: 'LinkedIn Posts', value: 'linkedin_posts', description: 'Company LinkedIn activity' },
-	{ name: 'Website Changes', value: 'website_changes', description: 'Website content changes' },
-	{
-		name: 'Website Keywords',
-		value: 'website_keywords',
-		description: 'Keyword search on websites',
-	},
-];
-
-// Prospect enrichment options
-export const prospectEnrichmentOptions = [
-	{
-		name: 'Contact Information',
-		value: 'contacts',
-		description: 'Email, phone, and contact details',
-	},
-	{ name: 'LinkedIn Posts', value: 'linkedin_posts', description: 'Individual LinkedIn activity' },
-	{
-		name: 'Professional Profile',
-		value: 'profiles',
-		description: 'Detailed professional information',
-	},
-];
-
-// Business event types
-export const businessEventTypes = [
-	{ name: 'IPO Announcement', value: 'ipo_announcement' },
-	{ name: 'New Funding Round', value: 'new_funding_round' },
-	{ name: 'Acquisition', value: 'acquisition' },
-	{ name: 'Executive Changes', value: 'executive_changes' },
-];
-
-// Prospect event types
-export const prospectEventTypes = [
-	{ name: 'Role Change', value: 'prospect_changed_role' },
-	{ name: 'Company Change', value: 'prospect_changed_company' },
-	{ name: 'New Position', value: 'new_position' },
-];
-
-// Autocomplete field options
-export const autocompleteFields = [
-	{ name: 'Google Category', value: 'google_category' },
-	{ name: 'Industry', value: 'industry' },
-	{ name: 'Technology', value: 'technology' },
-	{ name: 'Location', value: 'location' },
-	{ name: 'Company Size', value: 'company_size' },
-];
-
-// New flexible example structure
-export interface JsonExample {
-	/** Description shown in tooltip/hover to inform users about the structure */
-	description: string;
-	/** Default JSON value for this example */
-	default: string;
-	/** Display conditions - when this example should be shown */
-	displayOptions: { show?: Record<string, any>; hide?: Record<string, any> };
-}
+import {
+	autocompleteFields,
+	businessEnrichmentOptions,
+	businessEventTypes,
+	prospectEnrichmentOptions,
+	prospectEventTypes,
+} from './constants';
+import { JsonExample } from './types';
 
 export const operations = {
 	match: {
 		displayName: 'Match',
 		description: 'Find and match businesses or prospects to get their Explorium IDs',
+		properties: [
+			{
+				displayName: 'Type',
+				name: 'type',
+				type: 'options',
+				options: [
+					{
+						name: 'Business',
+						value: 'businesses',
+						description: 'Match companies by name and/or domain',
+					},
+					{
+						name: 'Prospect',
+						value: 'prospects',
+						description: 'Match people by email, name, or other identifiers',
+					},
+				],
+				default: 'businesses',
+				required: true,
+				description: 'Type of entity to match',
+			},
+			{
+				displayName: 'Businesses to Match',
+				name: 'businesses_to_match',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add businesses to match by name and/or domain',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'businesses_to_match',
+						displayName: 'Businesses',
+						values: [
+							{
+								displayName: 'Company Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Microsoft',
+								description: 'Name of the company to match',
+							},
+							{
+								displayName: 'Company Domain',
+								name: 'domain',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. microsoft.com',
+								description: 'Domain of the company to match',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Prospects to Match',
+				name: 'prospects_to_match',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add prospects to match by various identifiers',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'prospects_to_match',
+						displayName: 'Prospects',
+						values: [
+							{
+								displayName: 'Business ID',
+								name: 'business_id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
+								description: 'Explorium business ID if known',
+							},
+							{
+								displayName: 'Company Name',
+								name: 'company_name',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Example Corp',
+								description: 'Company name (helps with matching)',
+							},
+							{
+								displayName: 'Email Address',
+								name: 'email',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. john@example.com',
+								description: 'Email address of the prospect',
+							},
+							{
+								displayName: 'Full Name',
+								name: 'full_name',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. John Doe',
+								description: 'Full name of the prospect',
+							},
+							{
+								displayName: 'LinkedIn Profile',
+								name: 'linkedin',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. linkedin.com/in/johndoe',
+								description: 'LinkedIn profile URL',
+							},
+							{
+								displayName: 'Phone Number',
+								name: 'phone_number',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g.	+1234567890',
+								description: 'Phone number of the prospect',
+							},
+						],
+					},
+				],
+			},
+		],
 		examples: [
 			{
 				description: 'Match businesses by name and domain to get their Explorium business IDs',
@@ -155,28 +190,51 @@ export const operations = {
 				},
 			},
 		],
+	},
+	enrich: {
+		displayName: 'Enrich',
+		description: 'Add additional data to existing records',
 		properties: [
 			{
 				displayName: 'Type',
 				name: 'type',
 				type: 'options',
 				options: [
-					{
-						name: 'Business',
-						value: 'businesses',
-						description: 'Match companies by name and/or domain',
-					},
-					{
-						name: 'Prospect',
-						value: 'prospects',
-						description: 'Match people by email, name, or other identifiers',
-					},
+					{ name: 'Business', value: 'businesses', description: 'Enrich company data' },
+					{ name: 'Prospect', value: 'prospects', description: 'Enrich person data' },
 				],
 				default: 'businesses',
 				required: true,
-				description: 'Type of entity to match',
+				description: 'Type of entity to enrich',
 			},
-			// Business fields - now as fixedCollection for better UX
+			{
+				displayName: 'Enrichment',
+				name: 'enrichment',
+				type: 'multiOptions',
+				options: businessEnrichmentOptions,
+				default: ['firmographics'],
+				required: true,
+				description: 'Types of business data to enrich',
+				displayOptions: { show: { type: ['businesses'] } },
+			},
+			{
+				displayName: 'Enrichment',
+				name: 'enrichment',
+				type: 'multiOptions',
+				options: prospectEnrichmentOptions,
+				default: ['contacts'],
+				required: true,
+				description: 'Types of prospect data to enrich',
+				displayOptions: { show: { type: ['prospects'] } },
+			},
+			{
+				displayName: 'Match First',
+				name: 'match',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether to find businesses/prospects before enriching, or use existing Explorium IDs',
+			},
 			{
 				displayName: 'Businesses to Match',
 				name: 'businesses_to_match',
@@ -186,7 +244,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add businesses to match by name and/or domain',
-				displayOptions: { show: { type: ['businesses'] } },
+				displayOptions: { show: { type: ['businesses'], match: [true], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'businesses_to_match',
@@ -197,7 +255,7 @@ export const operations = {
 								name: 'name',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., Microsoft',
+								placeholder: 'e.g. Microsoft',
 								description: 'Name of the company to match',
 							},
 							{
@@ -205,14 +263,13 @@ export const operations = {
 								name: 'domain',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., microsoft.com',
+								placeholder: 'e.g. microsoft.com',
 								description: 'Domain of the company to match',
 							},
 						],
 					},
 				],
 			},
-			// Prospect fields - now as fixedCollection for better UX
 			{
 				displayName: 'Prospects to Match',
 				name: 'prospects_to_match',
@@ -222,7 +279,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add prospects to match by various identifiers',
-				displayOptions: { show: { type: ['prospects'] } },
+				displayOptions: { show: { type: ['prospects'], match: [true], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'prospects_to_match',
@@ -233,7 +290,7 @@ export const operations = {
 								name: 'business_id',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
 								description: 'Explorium business ID if known',
 							},
 							{
@@ -241,7 +298,7 @@ export const operations = {
 								name: 'company_name',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., Example Corp',
+								placeholder: 'e.g. Example Corp',
 								description: 'Company name (helps with matching)',
 							},
 							{
@@ -249,7 +306,7 @@ export const operations = {
 								name: 'email',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., john@example.com',
+								placeholder: 'e.g. john@example.com',
 								description: 'Email address of the prospect',
 							},
 							{
@@ -257,7 +314,7 @@ export const operations = {
 								name: 'full_name',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., John Doe',
+								placeholder: 'e.g. John Doe',
 								description: 'Full name of the prospect',
 							},
 							{
@@ -265,7 +322,7 @@ export const operations = {
 								name: 'linkedin',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., linkedin.com/in/johndoe',
+								placeholder: 'e.g. linkedin.com/in/johndoe',
 								description: 'LinkedIn profile URL',
 							},
 							{
@@ -273,18 +330,96 @@ export const operations = {
 								name: 'phone_number',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g.,	+1234567890',
+								placeholder: 'e.g.	+1234567890',
 								description: 'Phone number of the prospect',
 							},
 						],
 					},
 				],
 			},
+			{
+				displayName: 'Business IDs',
+				name: 'business_ids',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add business IDs to enrich',
+				displayOptions: { show: { type: ['businesses'], match: [false], useJsonInput: [false] } },
+				options: [
+					{
+						displayName: 'ID',
+						name: 'business_ids',
+						values: [
+							{
+								displayName: 'Explorium Business ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Prospect IDs',
+				name: 'prospect_ids_collection',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Add prospect IDs to enrich',
+				displayOptions: { show: { type: ['prospects'], match: [false], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'prospect_ids',
+						displayName: 'Prospect IDs',
+						values: [
+							{
+								displayName: 'Prospect ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. 20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+								description: 'Explorium prospect ID',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Keywords',
+				name: 'keywords',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Keywords to search for (required for website keywords enrichment)',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['website_keywords'], useJsonInput: [false] },
+				},
+				options: [
+					{
+						name: 'keywords',
+						displayName: 'Keywords',
+						values: [
+							{
+								displayName: 'Keyword',
+								name: 'keyword',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. software',
+								description: 'Keyword to search for on websites',
+							},
+						],
+					},
+				],
+			},
 		],
-	},
-	enrich: {
-		displayName: 'Enrich',
-		description: 'Add additional data to existing records',
 		examples: [
 			{
 				description: 'Enrich businesses using business Explorium IDs',
@@ -395,286 +530,10 @@ export const operations = {
 				displayOptions: { show: { type: ['prospects'], match: [false] } },
 			},
 		],
-		properties: [
-			{
-				displayName: 'Type',
-				name: 'type',
-				type: 'options',
-				options: [
-					{ name: 'Business', value: 'businesses', description: 'Enrich company data' },
-					{ name: 'Prospect', value: 'prospects', description: 'Enrich person data' },
-				],
-				default: 'businesses',
-				required: true,
-				description: 'Type of entity to enrich',
-			},
-			{
-				displayName: 'Enrichment',
-				name: 'enrichment',
-				type: 'multiOptions',
-				options: businessEnrichmentOptions,
-				default: ['firmographics'],
-				required: true,
-				description: 'Types of business data to enrich',
-				displayOptions: { show: { type: ['businesses'] } },
-			},
-			{
-				displayName: 'Enrichment',
-				name: 'enrichment',
-				type: 'multiOptions',
-				options: prospectEnrichmentOptions,
-				default: ['contacts'],
-				required: true,
-				description: 'Types of prospect data to enrich',
-				displayOptions: { show: { type: ['prospects'] } },
-			},
-			{
-				displayName: 'Match First',
-				name: 'match',
-				type: 'boolean',
-				default: false,
-				description:
-					'Whether to find businesses/prospects before enriching, or use existing Explorium IDs',
-			},
-			// Match fields for business - using fixedCollection
-			{
-				displayName: 'Businesses to Match',
-				name: 'businesses_to_match',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add businesses to match by name and/or domain',
-				displayOptions: { show: { type: ['businesses'], match: [true] } },
-				options: [
-					{
-						name: 'businesses_to_match',
-						displayName: 'Businesses',
-						values: [
-							{
-								displayName: 'Company Name',
-								name: 'name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., Microsoft',
-								description: 'Name of the company to match',
-							},
-							{
-								displayName: 'Company Domain',
-								name: 'domain',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., microsoft.com',
-								description: 'Domain of the company to match',
-							},
-						],
-					},
-				],
-			},
-			// Match fields for prospect - using fixedCollection
-			{
-				displayName: 'Prospects to Match',
-				name: 'prospects_to_match',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add prospects to match by various identifiers',
-				displayOptions: { show: { type: ['prospects'], match: [true] } },
-				options: [
-					{
-						name: 'prospects_to_match',
-						displayName: 'Prospects',
-						values: [
-							{
-								displayName: 'Business ID',
-								name: 'business_id',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
-								description: 'Explorium business ID if known',
-							},
-							{
-								displayName: 'Company Name',
-								name: 'company_name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., Example Corp',
-								description: 'Company name (helps with matching)',
-							},
-							{
-								displayName: 'Email Address',
-								name: 'email',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., john@example.com',
-								description: 'Email address of the prospect',
-							},
-							{
-								displayName: 'Full Name',
-								name: 'full_name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., John Doe',
-								description: 'Full name of the prospect',
-							},
-							{
-								displayName: 'LinkedIn Profile',
-								name: 'linkedin',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., linkedin.com/in/johndoe',
-								description: 'LinkedIn profile URL',
-							},
-							{
-								displayName: 'Phone Number',
-								name: 'phone_number',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g.,	+1234567890',
-								description: 'Phone number of the prospect',
-							},
-						],
-					},
-				],
-			},
-			// ID fields when not matching - using fixedCollection
-			{
-				displayName: 'Business IDs',
-				name: 'business_ids',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add business IDs to enrich',
-				displayOptions: { show: { type: ['businesses'], match: [false] } },
-				options: [
-					{
-						displayName: 'ID',
-						name: 'business_ids',
-						values: [
-							{
-								displayName: 'Explorium Business ID',
-								name: 'id',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
-							},
-						],
-					},
-				],
-			},
-			{
-				displayName: 'Prospect IDs',
-				name: 'prospect_ids_collection',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add prospect IDs to enrich',
-				displayOptions: { show: { type: ['prospects'], match: [false] } },
-				options: [
-					{
-						name: 'prospect_ids',
-						displayName: 'Prospect IDs',
-						values: [
-							{
-								displayName: 'Prospect ID',
-								name: 'id',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., 20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-								description: 'Explorium prospect ID',
-							},
-						],
-					},
-				],
-			},
-			// Website keywords parameter
-			{
-				displayName: 'Keywords',
-				name: 'keywords',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Keywords to search for (required for website keywords enrichment)',
-				displayOptions: { show: { type: ['businesses'], enrichment: ['website_keywords'] } },
-				options: [
-					{
-						name: 'keywords',
-						displayName: 'Keywords',
-						values: [
-							{
-								displayName: 'Keyword',
-								name: 'keyword',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g., software',
-								description: 'Keyword to search for on websites',
-							},
-						],
-					},
-				],
-			},
-		],
 	},
 	fetch: {
 		displayName: 'Fetch',
 		description: 'Retrieve records with filters and pagination',
-		examples: [
-			{
-				description: 'Fetch businesses with filters for country and company size in preview mode',
-				default: JSON.stringify(
-					{
-						mode: 'preview',
-						filters: {
-							country_code: { values: ['US'] },
-							company_size: { values: ['1-10'] },
-						},
-						size: 1000,
-						page_size: 5,
-						page: 1,
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['businesses'],
-					},
-				},
-			},
-			{
-				description:
-					'Fetch prospects with filters for email presence and job level in preview mode',
-				default: JSON.stringify(
-					{
-						mode: 'preview',
-						filters: {
-							has_email: { value: true },
-							job_level: { values: ['cxo'] },
-							business_id: { values: ['a34bacf839b923770b2c360eefa26748'] },
-						},
-						size: 1000,
-						page_size: 5,
-						page: 1,
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['prospects'],
-					},
-				},
-			},
-		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -689,29 +548,736 @@ export const operations = {
 				description: 'Type of entities to fetch',
 			},
 			{
-				displayName: 'Filters',
-				name: 'filters',
-				type: 'json',
-				default:
-					'{\n  "country_code": { "values": ["US"] },\n  "company_size": { "values": ["1-10"] }\n}',
-				description: 'Filter criteria for the search',
-				typeOptions: { rows: 6 },
+				displayName: 'Mode',
+				name: 'mode',
+				type: 'options',
+				options: [
+					{ name: 'Full', value: 'full', description: 'Returns complete data for each record' },
+					{
+						name: 'Preview',
+						value: 'preview',
+						description: 'Returns lightweight data with key fields only',
+					},
+				],
+				default: 'preview',
+				description: 'Level of detail in returned data',
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+			{
+				displayName: 'Size',
+				name: 'size',
+				type: 'number',
+				default: 50,
+				description: 'Total maximum number of records to return across all pages (max 10,000)',
+				typeOptions: { minValue: 1, maxValue: 10000 },
+				displayOptions: { show: { useJsonInput: [false] } },
 			},
 			{
 				displayName: 'Page Size',
 				name: 'page_size',
 				type: 'number',
-				default: 10,
-				description: 'Number of results per page (1-1000)',
-				typeOptions: { minValue: 1, maxValue: 1000 },
+				default: 50,
+				description: 'Number of records per page (max 100)',
+				typeOptions: { minValue: 1, maxValue: 100 },
+				displayOptions: { show: { useJsonInput: [false] } },
 			},
 			{
-				displayName: 'Next Cursor',
-				name: 'next_cursor',
-				type: 'string',
-				default: '',
-				placeholder: 'Leave empty for first page',
-				description: 'Cursor for pagination (from previous response)',
+				displayName: 'Page',
+				name: 'page',
+				type: 'number',
+				default: 1,
+				description: 'Page number to retrieve (1-based index)',
+				typeOptions: { minValue: 1 },
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+			{
+				displayName: 'Country Codes',
+				name: 'country_code',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by HQ country using alpha-2 codes (e.g. "us", "ca")',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'country_code',
+						displayName: 'Country Codes',
+						values: [
+							{
+								displayName: 'Country Code',
+								name: 'code',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. us',
+								description: 'Two-letter country code',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Region Country Codes',
+				name: 'region_country_code',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by region using ISO 3166-2 codes (e.g. "us-ca", "us-tx")',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'region_country_code',
+						displayName: 'Region Codes',
+						values: [
+							{
+								displayName: 'Region Code',
+								name: 'code',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. us-ca',
+								description: 'Country-region code format',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Cities',
+				name: 'city_region_country',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by city-level locations (e.g. "San Francisco, CA, US")',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'city_region_country',
+						displayName: 'Cities',
+						values: [
+							{
+								displayName: 'Location',
+								name: 'location',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. San Francisco, CA, US',
+								description: 'Full location string',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Sizes',
+				name: 'company_size',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by employee count ranges',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_size',
+						displayName: 'Company Sizes',
+						values: [
+							{
+								displayName: 'Size Range',
+								name: 'size',
+								type: 'options',
+								options: [
+									{ name: '1-10', value: '1-10' },
+									{ name: '10001+', value: '10001+' },
+									{ name: '1001-5000', value: '1001-5000' },
+									{ name: '11-50', value: '11-50' },
+									{ name: '201-500', value: '201-500' },
+									{ name: '5001-10000', value: '5001-10000' },
+									{ name: '501-1000', value: '501-1000' },
+									{ name: '51-200', value: '51-200' },
+								],
+								default: '1-10',
+								description: 'Employee count range',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Revenue',
+				name: 'company_revenue',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by annual revenue ranges',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_revenue',
+						displayName: 'Revenue Ranges',
+						values: [
+							{
+								displayName: 'Revenue Range',
+								name: 'range',
+								type: 'options',
+								// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
+								options: [
+									{ name: '0-500K', value: '0-500K' },
+									{ name: '500K-1M', value: '500K-1M' },
+									{ name: '1M-5M', value: '1M-5M' },
+									{ name: '5M-10M', value: '5M-10M' },
+									{ name: '10M-25M', value: '10M-25M' },
+									{ name: '25M-75M', value: '25M-75M' },
+									{ name: '75M-200M', value: '75M-200M' },
+									{ name: '200M-500M', value: '200M-500M' },
+									{ name: '500M-1B', value: '500M-1B' },
+									{ name: '1B-10B', value: '1B-10B' },
+									{ name: '10B-100B', value: '10B-100B' },
+									{ name: '100B-1T', value: '100B-1T' },
+									{ name: '1T-10T', value: '1T-10T' },
+									{ name: '10T+', value: '10T+' },
+								],
+								default: '0-500K',
+								description: 'Annual revenue range',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Age',
+				name: 'company_age',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by years since establishment',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_age',
+						displayName: 'Age Ranges',
+						values: [
+							{
+								displayName: 'Age Range',
+								name: 'range',
+								type: 'options',
+								options: [
+									{ name: '0-3 Years', value: '0-3' },
+									{ name: '10-15 Years', value: '10-15' },
+									{ name: '15-20 Years', value: '15-20' },
+									{ name: '20+ Years', value: '20+' },
+									{ name: '3-6 Years', value: '3-6' },
+									{ name: '6-10 Years', value: '6-10' },
+								],
+								default: '0-3',
+								description: 'Company age range',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Google Categories',
+				name: 'google_category',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by Google business categories',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'google_category',
+						displayName: 'Google Categories',
+						values: [
+							{
+								displayName: 'Category',
+								name: 'category',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Software Development',
+								description: 'Google business category',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'NAICS Categories',
+				name: 'naics_category',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by NAICS industry codes',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'naics_category',
+						displayName: 'NAICS Categories',
+						values: [
+							{
+								displayName: 'NAICS Code',
+								name: 'code',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. 23',
+								description: '2017 NAICS industry code',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'LinkedIn Categories',
+				name: 'linkedin_category',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by LinkedIn business categories',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'linkedin_category',
+						displayName: 'LinkedIn Categories',
+						values: [
+							{
+								displayName: 'Category',
+								name: 'category',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. software development',
+								description: 'LinkedIn business category',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Tech Stack Categories',
+				name: 'company_tech_stack_category',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by technology categories used by companies',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_tech_stack_category',
+						displayName: 'Tech Categories',
+						values: [
+							{
+								displayName: 'Technology Category',
+								name: 'category',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Marketing, CRM, Cloud Services',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Technologies',
+				name: 'company_tech_stack_tech',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by specific technologies used by companies',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_tech_stack_tech',
+						displayName: 'Technologies',
+						values: [
+							{
+								displayName: 'Technology',
+								name: 'tech',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. JavaScript, HTML5, Apache',
+								description: 'Specific technology',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Names',
+				name: 'company_name',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by specific company names',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_name',
+						displayName: 'Company Names',
+						values: [
+							{
+								displayName: 'Company Name',
+								name: 'name',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Google, Walmart',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Number of Locations',
+				name: 'number_of_locations',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by number of office locations',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'number_of_locations',
+						displayName: 'Location Counts',
+						values: [
+							{
+								displayName: 'Location Range',
+								name: 'range',
+								type: 'options',
+								options: [
+									{ name: '1', value: '1' },
+									{ name: '2-5', value: '2-5' },
+									{ name: '6+', value: '6+' },
+								],
+								default: '1',
+								description: 'Number of office locations',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Website Keywords',
+				name: 'website_keywords',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by keywords mentioned on company websites',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'website_keywords',
+						displayName: 'Keywords',
+						values: [
+							{
+								displayName: 'Keyword',
+								name: 'keyword',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. sustainability',
+								description: 'Keyword to search for on websites',
+							},
+						],
+					},
+				],
+			},
+			// Prospect-specific filters
+			{
+				displayName: 'Business IDs',
+				name: 'business_id',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter prospects by specific business IDs',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'business_id',
+						displayName: 'Business IDs',
+						values: [
+							{
+								displayName: 'Business ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
+								description: 'Explorium business ID',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Job Levels',
+				name: 'job_level',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by job seniority levels',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'job_level',
+						displayName: 'Job Levels',
+						values: [
+							{
+								displayName: 'Job Level',
+								name: 'level',
+								type: 'options',
+								options: [
+									{ name: 'CXO', value: 'cxo' },
+									{ name: 'Director', value: 'director' },
+									{ name: 'Entry Level', value: 'entry' },
+									{ name: 'Manager', value: 'manager' },
+									{ name: 'Senior', value: 'senior' },
+								],
+								default: 'manager',
+								description: 'Job seniority level',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Job Departments',
+				name: 'job_department',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by job departments',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'job_department',
+						displayName: 'Job Departments',
+						values: [
+							{
+								displayName: 'Department',
+								name: 'department',
+								type: 'options',
+								options: [
+									{ name: 'Business Development', value: 'business development' },
+									{ name: 'Engineering', value: 'engineering' },
+									{ name: 'Finance', value: 'finance' },
+									{ name: 'Human Resources', value: 'human resources' },
+									{ name: 'Legal', value: 'legal' },
+									{ name: 'Marketing', value: 'marketing' },
+									{ name: 'Operations', value: 'operations' },
+									{ name: 'Sales', value: 'sales' },
+								],
+								default: 'sales',
+								description: 'Job department',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Has Email',
+				name: 'has_email',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to filter prospects who have email addresses',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+			},
+			{
+				displayName: 'Has Phone',
+				name: 'has_phone_number',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to filter prospects who have phone numbers',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+			},
+			{
+				displayName: 'Country Codes (Prospect)',
+				name: 'country_code_prospect',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by prospect location country using alpha-2 codes (e.g. "us", "ca")',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'country_code_prospect',
+						displayName: 'Country Codes',
+						values: [
+							{
+								displayName: 'Country Code',
+								name: 'code',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. us',
+								description: 'Two-letter country code for prospect location',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Country Codes',
+				name: 'company_country_code',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by company HQ country using alpha-2 codes (e.g. "us", "ca")',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_country_code',
+						displayName: 'Company Country Codes',
+						values: [
+							{
+								displayName: 'Country Code',
+								name: 'code',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. us',
+								description: 'Two-letter country code for company HQ',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Sizes (Prospects)',
+				name: 'company_size_prospects',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by company employee count ranges',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_size_prospects',
+						displayName: 'Company Sizes',
+						values: [
+							{
+								displayName: 'Size Range',
+								name: 'size',
+								type: 'options',
+								options: [
+									{ name: '1-10', value: '1-10' },
+									{ name: '10001+', value: '10001+' },
+									{ name: '1001-5000', value: '1001-5000' },
+									{ name: '11-50', value: '11-50' },
+									{ name: '201-500', value: '201-500' },
+									{ name: '5001-10000', value: '5001-10000' },
+									{ name: '501-1000', value: '501-1000' },
+									{ name: '51-200', value: '51-200' },
+								],
+								default: '11-50',
+								description: 'Company employee count range',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Company Revenue (Prospects)',
+				name: 'company_revenue_prospects',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by company annual revenue ranges',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'company_revenue_prospects',
+						displayName: 'Revenue Ranges',
+						values: [
+							{
+								displayName: 'Revenue Range',
+								name: 'range',
+								type: 'options',
+								// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
+								options: [
+									{ name: '0-500K', value: '0-500K' },
+									{ name: '500K-1M', value: '500K-1M' },
+									{ name: '1M-5M', value: '1M-5M' },
+									{ name: '5M-10M', value: '5M-10M' },
+									{ name: '10M-25M', value: '10M-25M' },
+									{ name: '25M-75M', value: '25M-75M' },
+									{ name: '75M-200M', value: '75M-200M' },
+									{ name: '200M-500M', value: '200M-500M' },
+									{ name: '500M-1B', value: '500M-1B' },
+									{ name: '1B-10B', value: '1B-10B' },
+									{ name: '10B-100B', value: '10B-100B' },
+									{ name: '100B-1T', value: '100B-1T' },
+									{ name: '1T-10T', value: '1T-10T' },
+									{ name: '10T+', value: '10T+' },
+								],
+								default: '1M-5M',
+								description: 'Company annual revenue range',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Additional Filters (JSON)',
+				name: 'additional_filters',
+				type: 'json',
+				default: '{}',
+				description: 'Additional filter criteria as JSON (for complex or unlisted filters)',
+				typeOptions: { rows: 4 },
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+		],
+		examples: [
+			{
+				description: 'Fetch businesses or prospects with filters and pagination',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						size: 50,
+						page_size: 50,
+						page: 1,
+						filters: {
+							country_code: { values: ['us'] },
+							company_size: { values: ['11-50', '51-200'] },
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {},
+				},
 			},
 		],
 	},
@@ -802,7 +1368,7 @@ export const operations = {
 								name: 'name',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., Microsoft',
+								placeholder: 'e.g. Microsoft',
 								description: 'Name of the company',
 							},
 							{
@@ -810,7 +1376,7 @@ export const operations = {
 								name: 'domain',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., microsoft.com',
+								placeholder: 'e.g. microsoft.com',
 								description: 'Domain of the company',
 							},
 						],
@@ -838,7 +1404,7 @@ export const operations = {
 								name: 'business_id',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
 								description: 'Explorium business ID if known',
 							},
 							{
@@ -846,7 +1412,7 @@ export const operations = {
 								name: 'company_name',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., Example Corp',
+								placeholder: 'e.g. Example Corp',
 								description: 'Company name (helps with matching)',
 							},
 							{
@@ -854,7 +1420,7 @@ export const operations = {
 								name: 'email',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., john@example.com',
+								placeholder: 'e.g. john@example.com',
 								description: 'Email address of the prospect',
 							},
 							{
@@ -862,7 +1428,7 @@ export const operations = {
 								name: 'full_name',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., John Doe',
+								placeholder: 'e.g. John Doe',
 								description: 'Full name of the prospect',
 							},
 							{
@@ -870,7 +1436,7 @@ export const operations = {
 								name: 'linkedin',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., linkedin.com/in/johndoe',
+								placeholder: 'e.g. linkedin.com/in/johndoe',
 								description: 'LinkedIn profile URL',
 							},
 							{
@@ -878,7 +1444,7 @@ export const operations = {
 								name: 'phone_number',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g.,	+1234567890',
+								placeholder: 'e.g.	+1234567890',
 								description: 'Phone number of the prospect',
 							},
 						],
@@ -906,7 +1472,7 @@ export const operations = {
 								name: 'id',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
 								description: 'Explorium business ID',
 							},
 						],
@@ -933,7 +1499,7 @@ export const operations = {
 								name: 'id',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g., 20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+								placeholder: 'e.g. 20ae6cbf564ee683e66685e429844a5ff8ffc30f',
 								description: 'Explorium prospect ID',
 							},
 						],
@@ -1011,7 +1577,7 @@ export const operations = {
 				name: 'query',
 				type: 'string',
 				default: '',
-				placeholder: 'e.g., software',
+				placeholder: 'e.g. software',
 				required: true,
 				description: 'Search term for autocomplete',
 			},
@@ -1026,27 +1592,4 @@ export type StreamlinedOperation = {
 	description: string;
 	examples?: JsonExample[];
 	properties: INodeProperties[];
-};
-
-// Mapping enrichment types to endpoints
-export const enrichmentEndpoints = {
-	businesses: {
-		firmographics: '/v1/businesses/firmographics/bulk_enrich',
-		technographics: '/v1/businesses/technographics/bulk_enrich',
-		company_ratings: '/v1/businesses/company_ratings_by_employees/bulk_enrich',
-		financial_metrics: '/v1/businesses/financial_indicators/bulk_enrich',
-		funding_and_acquisitions: '/v1/businesses/funding_and_acquisition/bulk_enrich',
-		challenges: '/v1/businesses/pc_business_challenges_10k/bulk_enrich',
-		competitive_landscape: '/v1/businesses/pc_competitive_landscape_10k/bulk_enrich',
-		strategic_insights: '/v1/businesses/pc_strategy_10k/bulk_enrich',
-		workforce_trends: '/v1/businesses/workforce_trends/bulk_enrich',
-		linkedin_posts: '/v1/businesses/linkedin_posts/bulk_enrich',
-		website_changes: '/v1/businesses/website_changes/bulk_enrich',
-		website_keywords: '/v1/businesses/company_website_keywords/bulk_enrich',
-	},
-	prospects: {
-		contacts: '/v1/prospects/contacts_information/bulk_enrich',
-		linkedin_posts: '/v1/prospects/linkedin_posts/bulk_enrich',
-		profiles: '/v1/prospects/profiles/bulk_enrich',
-	},
 };
