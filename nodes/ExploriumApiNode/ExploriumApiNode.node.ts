@@ -320,6 +320,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 	const shouldMatch = executeFunctions.getNodeParameter('match', 0, false) as boolean;
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
+	let keywordsBody: { parameters?: { keywords: string[] } } | undefined;
 	let body: (BusinessIds & { parameters?: { keywords: string[] } }) | ProspectIds;
 
 	// Get entity IDs (either by matching or from provided IDs)
@@ -366,6 +367,25 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		);
 	}
 
+	if (type === 'businesses' && enrichments.includes('website_keywords')) {
+		if (useJsonInput) {
+			const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+			const jsonInputObject = JSON.parse(jsonInput);
+			keywordsBody = { parameters: jsonInputObject.parameters };
+		} else {
+			const keywordsCollection = executeFunctions.getNodeParameter('keywords', 0, {
+				keywords: [],
+			}) as { keywords: Array<{ keyword: string }> };
+
+			const keywords =
+				keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];
+
+			if (keywords.length > 0) {
+				keywordsBody = { parameters: { keywords } };
+			}
+		}
+	}
+
 	// Process each enrichment type
 	for (const enrichment of enrichments) {
 		const endpoint =
@@ -378,19 +398,8 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			);
 		}
 
-		// Add parameters for website keywords
-		if ('business_ids' in body && enrichment === 'website_keywords') {
-			const keywords = executeFunctions.getNodeParameter('keywords', 0, '') as string;
-			if (keywords) {
-				try {
-					(body as any).parameters = { keywords: JSON.parse(keywords) };
-				} catch {
-					throw new NodeOperationError(
-						executeFunctions.getNode(),
-						'Invalid JSON format for keywords',
-					);
-				}
-			}
+		if (type === 'businesses' && enrichment === 'website_keywords' && keywordsBody) {
+			body = { ...body, ...keywordsBody };
 		}
 
 		const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(

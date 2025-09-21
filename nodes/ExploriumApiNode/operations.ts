@@ -373,7 +373,7 @@ export const operations = {
 				displayOptions: {
 					show: {
 						type: ['businesses'],
-						match: [false],
+						match: [true],
 						enrichment: ['website_keywords'],
 					},
 				},
@@ -592,12 +592,29 @@ export const operations = {
 			{
 				displayName: 'Keywords',
 				name: 'keywords',
-				type: 'string',
-				default: '',
-				placeholder: 'e.g., ["software", "cloud", "AI"]',
-				description:
-					'JSON array of keywords to search for (required for website keywords enrichment)',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Keywords to search for (required for website keywords enrichment)',
 				displayOptions: { show: { type: ['businesses'], enrichment: ['website_keywords'] } },
+				options: [
+					{
+						name: 'keywords',
+						displayName: 'Keywords',
+						values: [
+							{
+								displayName: 'Keyword',
+								name: 'keyword',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g., software',
+								description: 'Keyword to search for on websites',
+							},
+						],
+					},
+				],
 			},
 		],
 	},
