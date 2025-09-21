@@ -46,7 +46,7 @@ export class ExploriumApiNode implements INodeType {
 				})),
 				default: '',
 			},
-			// Dynamic properties based on operation
+			// Handle basic input fields for each operation
 			...Object.entries(operations).flatMap(([operationKey, operationConfig]) =>
 				operationConfig.properties.map((property) => {
 					return {
@@ -60,6 +60,7 @@ export class ExploriumApiNode implements INodeType {
 					} as INodeProperties;
 				}),
 			),
+			// Toggle between form fields and Advanced JSON
 			{
 				displayName: 'Advanced JSON Input',
 				name: 'useJsonInput',
@@ -67,10 +68,10 @@ export class ExploriumApiNode implements INodeType {
 				default: false,
 				description: 'Whether to use direct JSON input instead of form fields',
 			},
-			// Dynamic JSON input fields for each operation
+			// Handle JSON examples for each operation
 			...Object.keys(operations).reduce((acc, operationKey) => {
-				const examples = operations[operationKey as OperationKey].jsonExamples;
-				for (const example of examples) {
+				const jsonExamples = operations[operationKey as OperationKey].jsonExamples;
+				for (const example of jsonExamples) {
 					const { default: exampleDefault, description } = example;
 
 					acc.push({
@@ -100,7 +101,6 @@ export class ExploriumApiNode implements INodeType {
 		const operation = this.getNodeParameter('operation', 0) as OperationKey;
 
 		try {
-			// Handle streamlined operations
 			switch (operation) {
 				case 'match':
 					return await executeMatch(this);
