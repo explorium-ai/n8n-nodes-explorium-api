@@ -1546,6 +1546,28 @@ export const operations = {
 	autocomplete: {
 		displayName: 'Autocomplete',
 		description: 'Get field suggestions and autocomplete values',
+		properties: [
+			{
+				displayName: 'Field',
+				name: 'field',
+				type: 'options',
+				options: autocompleteFields,
+				default: 'google_category',
+				required: true,
+				description: 'Field to get autocomplete suggestions for',
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+			{
+				displayName: 'Query',
+				name: 'query',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. software',
+				required: true,
+				description: 'Search term for autocomplete',
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+		],
 		examples: [
 			{
 				description: 'Get autocomplete suggestions for a specific field using a search query',
@@ -1558,30 +1580,8 @@ export const operations = {
 					2,
 				),
 				displayOptions: {
-					show: {
-						field: ['google_category'],
-					},
+					show: { field: ['google_category'] },
 				},
-			},
-		],
-		properties: [
-			{
-				displayName: 'Field',
-				name: 'field',
-				type: 'options',
-				options: autocompleteFields,
-				default: 'google_category',
-				required: true,
-				description: 'Field to get autocomplete suggestions for',
-			},
-			{
-				displayName: 'Query',
-				name: 'query',
-				type: 'string',
-				default: '',
-				placeholder: 'e.g. software',
-				required: true,
-				description: 'Search term for autocomplete',
 			},
 		],
 	},
