@@ -553,11 +553,17 @@ export const operations = {
 				displayOptions: { show: { type: ['businesses'], match: [false] } },
 				options: [
 					{
-						displayName: 'Explorium Business ID',
+						displayName: 'ID',
 						name: 'business_ids',
-						type: 'string',
-						default: '',
-						placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+						values: [
+							{
+								displayName: 'Explorium Business ID',
+								name: 'id',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g., a34bacf839b923770b2c360eefa26748',
+							},
+						],
 					},
 				],
 			},

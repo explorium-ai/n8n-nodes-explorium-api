@@ -20,10 +20,18 @@ export interface Prospect {
 	business_id: string;
 }
 
-export interface BusinessIds {
+export interface BusinessIds_Collection {
+	business_ids: Array<{ id: string }>;
+}
+
+export interface ProspectIds_Collection {
+	prospect_ids: Array<{ id: string }>;
+}
+
+export interface BusinessIds_Body {
 	business_ids: string[];
 }
 
-export interface ProspectIds {
+export interface ProspectIds_Body {
 	prospect_ids: string[];
 }

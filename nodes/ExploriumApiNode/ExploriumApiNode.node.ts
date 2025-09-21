@@ -9,7 +9,14 @@ import {
 } from 'n8n-workflow';
 
 import { enrichmentEndpoints, OperationKey, operations } from './operations';
-import { BusinessesToMatch, ProspectsToMatch, BusinessIds, ProspectIds } from './types';
+import {
+	BusinessesToMatch,
+	ProspectsToMatch,
+	BusinessIds_Collection,
+	ProspectIds_Collection,
+	BusinessIds_Body,
+	ProspectIds_Body,
+} from './types';
 import { excludeEmptyValues } from './utils';
 
 export class ExploriumApiNode implements INodeType {
@@ -321,7 +328,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
 	let keywordsBody: { parameters?: { keywords: string[] } } | undefined;
-	let body: (BusinessIds & { parameters?: { keywords: string[] } }) | ProspectIds;
+	let body: (BusinessIds_Body & { parameters?: { keywords: string[] } }) | ProspectIds_Body;
 
 	// Get entity IDs (either by matching or from provided IDs)
 	if (shouldMatch) {
@@ -343,13 +350,21 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		body = jsonInputObject;
 	} else {
 		if (type === 'businesses') {
-			body = executeFunctions.getNodeParameter('business_ids', 0, {
+			const collection = executeFunctions.getNodeParameter('business_ids', 0, {
 				business_ids: [],
-			}) as BusinessIds;
+			}) as BusinessIds_Collection;
+
+			body = {
+				business_ids: collection.business_ids.map((x) => x.id),
+			};
 		} else {
-			body = executeFunctions.getNodeParameter('prospect_ids', 0, {
+			const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
 				prospect_ids: [],
-			}) as ProspectIds;
+			}) as ProspectIds_Collection;
+
+			body = {
+				prospect_ids: collection.prospect_ids.map((x) => x.id),
+			};
 		}
 	}
 
@@ -490,10 +505,10 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 		if (type === 'businesses') {
 			const businessIdsCollection = executeFunctions.getNodeParameter('business_ids', 0, {
 				business_ids: [],
-			}) as BusinessIds;
+			}) as BusinessIds_Collection;
 
 			const businessIdsList = businessIdsCollection.business_ids || [];
-			entityIds = businessIdsList;
+			entityIds = businessIdsList.map((x) => x.id);
 
 			if (entityIds.length === 0) {
 				throw new NodeOperationError(
@@ -506,10 +521,10 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 				'prospect_ids_collection',
 				0,
 				{ prospect_ids: [] },
-			) as ProspectIds;
+			) as ProspectIds_Collection;
 
 			const prospectIdsList = prospectIdsCollection.prospect_ids || [];
-			entityIds = prospectIdsList;
+			entityIds = prospectIdsList.map((x) => x.id);
 
 			if (entityIds.length === 0) {
 				throw new NodeOperationError(
