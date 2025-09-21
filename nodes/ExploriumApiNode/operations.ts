@@ -1116,7 +1116,7 @@ export const operations = {
 				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
 			},
 			{
-				displayName: 'Country Codes (Prospect)',
+				displayName: 'Country Codes',
 				name: 'country_code_prospect',
 				type: 'fixedCollection',
 				default: {},
@@ -1170,7 +1170,7 @@ export const operations = {
 				],
 			},
 			{
-				displayName: 'Company Sizes (Prospects)',
+				displayName: 'Company Sizes',
 				name: 'company_size_prospects',
 				type: 'fixedCollection',
 				default: {},
@@ -1206,7 +1206,7 @@ export const operations = {
 				],
 			},
 			{
-				displayName: 'Company Revenue (Prospects)',
+				displayName: 'Company Revenue',
 				name: 'company_revenue_prospects',
 				type: 'fixedCollection',
 				default: {},
