@@ -1285,48 +1285,6 @@ export const operations = {
 	events: {
 		displayName: 'Events',
 		description: 'Get business or prospect events',
-		jsonExamples: [
-			{
-				description:
-					'Get business events like IPO announcements and funding rounds using business IDs',
-				default: JSON.stringify(
-					{
-						business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
-						event_types: ['ipo_announcement', 'new_funding_round'],
-						timestamp_from: '2024-01-01',
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['businesses'],
-					},
-				},
-			},
-			{
-				description: 'Get prospect events like role changes and company changes using prospect IDs',
-				default: JSON.stringify(
-					{
-						event_types: ['prospect_changed_role', 'prospect_changed_company'],
-						prospect_ids: [
-							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-							'4c485f009d59e319dc039cdf3e935b85014e6a33',
-							'fd4c46716295a2e4731417eee802a883280e4d57',
-							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
-						],
-						timestamp_from: '2024-01-01',
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['prospects'],
-					},
-				},
-			},
-		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -1358,10 +1316,10 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add businesses to match by name and/or domain',
-				displayOptions: { show: { type: ['businesses'], match: [true] } },
+				displayOptions: { show: { type: ['businesses'], match: [true], useJsonInput: [false] } },
 				options: [
 					{
-						name: 'business',
+						name: 'businesses_to_match',
 						displayName: 'Business',
 						values: [
 							{
@@ -1394,10 +1352,10 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add prospects to match by various identifiers',
-				displayOptions: { show: { type: ['prospects'], match: [true] } },
+				displayOptions: { show: { type: ['prospects'], match: [true], useJsonInput: [false] } },
 				options: [
 					{
-						name: 'prospect',
+						name: 'prospects_to_match',
 						displayName: 'Prospect',
 						values: [
 							{
@@ -1462,7 +1420,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add business IDs for events',
-				displayOptions: { show: { type: ['businesses'], match: [false] } },
+				displayOptions: { show: { type: ['businesses'], match: [false], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'business_ids',
@@ -1489,7 +1447,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add prospect IDs for events',
-				displayOptions: { show: { type: ['prospects'], match: [false] } },
+				displayOptions: { show: { type: ['prospects'], match: [false], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'prospect_ids',
@@ -1515,7 +1473,7 @@ export const operations = {
 				options: businessEventTypes,
 				default: ['ipo_announcement'],
 				description: 'Types of business events to fetch',
-				displayOptions: { show: { type: ['businesses'] } },
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
 			},
 			{
 				displayName: 'Event Types',
@@ -1524,7 +1482,7 @@ export const operations = {
 				options: prospectEventTypes,
 				default: ['prospect_changed_role'],
 				description: 'Types of prospect events to fetch',
-				displayOptions: { show: { type: ['prospects'] } },
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
 			},
 			{
 				displayName: 'From Date',
@@ -1532,6 +1490,7 @@ export const operations = {
 				type: 'dateTime',
 				default: '',
 				description: 'Start date for events (ISO format)',
+				displayOptions: { show: { useJsonInput: [false] } },
 			},
 			{
 				displayName: 'To Date',
@@ -1539,6 +1498,99 @@ export const operations = {
 				type: 'dateTime',
 				default: '',
 				description: 'End date for events (ISO format)',
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+		],
+		jsonExamples: [
+			{
+				description:
+					'Get business events like IPO announcements and funding rounds using business IDs',
+				default: JSON.stringify(
+					{
+						business_ids: ['a34bacf839b923770b2c360eefa26748', '8adce3ca1cef0c986b22310e369a0793'],
+						event_types: ['ipo_announcement', 'new_funding_round'],
+						timestamp_from: '2024-01-01',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						match: [false],
+					},
+				},
+			},
+			{
+				description: 'Get business events by matching companies first using business info',
+				default: JSON.stringify(
+					{
+						businesses_to_match: [
+							{ name: 'Microsoft', domain: 'microsoft.com' },
+							{ name: 'Apple Inc.', domain: 'apple.com' },
+							{ name: 'Google', domain: 'google.com' },
+						],
+						event_types: ['ipo_announcement', 'new_funding_round'],
+						timestamp_from: '2024-01-01',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						match: [true],
+					},
+				},
+			},
+			{
+				description: 'Get prospect events like role changes and company changes using prospect IDs',
+				default: JSON.stringify(
+					{
+						event_types: ['prospect_changed_role', 'prospect_changed_company'],
+						prospect_ids: [
+							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
+							'4c485f009d59e319dc039cdf3e935b85014e6a33',
+							'fd4c46716295a2e4731417eee802a883280e4d57',
+							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
+						],
+						timestamp_from: '2024-01-01',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+						match: [false],
+					},
+				},
+			},
+			{
+				description: 'Get prospect events by matching prospects first using prospect info',
+				default: JSON.stringify(
+					{
+						prospects_to_match: [
+							{
+								email: 'omer.prizner@explorium.ai',
+								full_name: 'Omer Prizner',
+								phone_number: '',
+								company_name: '',
+								linkedin: '',
+							},
+						],
+						event_types: ['prospect_changed_role', 'prospect_changed_company'],
+						timestamp_from: '2024-01-01',
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+						match: [true],
+					},
+				},
 			},
 		],
 	},

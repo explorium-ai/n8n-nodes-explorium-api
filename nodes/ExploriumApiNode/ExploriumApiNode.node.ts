@@ -142,7 +142,7 @@ async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeE
 		let businessesToMatch: BusinessesToMatch;
 
 		if (useJsonInput) {
-			businessesToMatch = await extractJsonInput<BusinessesToMatch>(executeFunctions);
+			businessesToMatch = extractJsonInput<BusinessesToMatch>(executeFunctions);
 		} else {
 			businessesToMatch = executeFunctions.getNodeParameter('businesses_to_match', 0, {
 				businesses: [],
@@ -170,7 +170,7 @@ async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeE
 		endpoint = '/v1/prospects/match';
 		let prospectsToMatch: ProspectsToMatch;
 		if (useJsonInput) {
-			prospectsToMatch = await extractJsonInput<ProspectsToMatch>(executeFunctions);
+			prospectsToMatch = extractJsonInput<ProspectsToMatch>(executeFunctions);
 		} else {
 			prospectsToMatch = executeFunctions.getNodeParameter('prospects_to_match', 0, {
 				prospects_to_match: [],
@@ -221,8 +221,8 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 	let keywordsBody: { parameters?: { keywords: string[] } } | undefined;
 	let body: (BusinessIds_Body & { parameters?: { keywords: string[] } }) | ProspectIds_Body;
 
-	// Get entity IDs (either by matching or from provided IDs)
 	if (shouldMatch) {
+		// executeMatch can handle both JSON input and form fields
 		const matchResult = await executeMatch(executeFunctions);
 		const matchData = matchResult[0][0].json as any;
 
@@ -235,27 +235,29 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				prospect_ids: matchData.matched_prospects?.map((match: any) => match.prospect_id) || [],
 			};
 		}
-	} else if (useJsonInput) {
-		const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
-		const jsonInputObject = JSON.parse(jsonInput);
-		body = jsonInputObject;
 	} else {
-		if (type === 'businesses') {
-			const collection = executeFunctions.getNodeParameter('business_ids', 0, {
-				business_ids: [],
-			}) as BusinessIds_Collection;
-
-			body = {
-				business_ids: collection.business_ids.map((x) => x.id),
-			};
+		if (useJsonInput) {
+			const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+			const jsonInputObject = JSON.parse(jsonInput);
+			body = jsonInputObject;
 		} else {
-			const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
-				prospect_ids: [],
-			}) as ProspectIds_Collection;
+			if (type === 'businesses') {
+				const collection = executeFunctions.getNodeParameter('business_ids', 0, {
+					business_ids: [],
+				}) as BusinessIds_Collection;
 
-			body = {
-				prospect_ids: collection.prospect_ids.map((x) => x.id),
-			};
+				body = {
+					business_ids: collection.business_ids.map((x) => x.id),
+				};
+			} else {
+				const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
+					prospect_ids: [],
+				}) as ProspectIds_Collection;
+
+				body = {
+					prospect_ids: collection.prospect_ids.map((x) => x.id),
+				};
+			}
 		}
 	}
 
@@ -563,76 +565,91 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 	const returnData: INodeExecutionData[] = [];
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
 	const shouldMatch = executeFunctions.getNodeParameter('match', 0, false) as boolean;
-	const eventTypes = executeFunctions.getNodeParameter('event_types', 0) as string[];
+	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
+	const jsonInput = extractJsonInput(executeFunctions);
 
-	const timestampFrom = executeFunctions.getNodeParameter('timestamp_from', 0, '') as string;
-	const timestampTo = executeFunctions.getNodeParameter('timestamp_to', 0, '') as string;
+	const body: any = {};
 
-	let entityIds: string[] = [];
-
-	// Get entity IDs (either by matching or from provided IDs)
+	// Handle business_ids or prospect_ids
 	if (shouldMatch) {
+		// executeMatch can handle both JSON input and form fields
 		const matchResult = await executeMatch(executeFunctions);
 		const matchData = matchResult[0][0].json as any;
 
 		if (type === 'businesses') {
-			entityIds = matchData.matched_businesses?.map((match: any) => match.business_id) || [];
+			body.business_ids =
+				matchData.matched_businesses?.map((match: any) => match.business_id).filter(Boolean) || [];
 		} else {
-			entityIds = matchData.matched_prospects?.map((match: any) => match.prospect_id) || [];
+			body.prospect_ids =
+				matchData.matched_prospects?.map((match: any) => match.prospect_id).filter(Boolean) || [];
 		}
 	} else {
-		if (type === 'businesses') {
-			const businessIdsCollection = executeFunctions.getNodeParameter('business_ids', 0, {
-				business_ids: [],
-			}) as BusinessIds_Collection;
-
-			const businessIdsList = businessIdsCollection.business_ids || [];
-			entityIds = businessIdsList.map((x) => x.id);
-
-			if (entityIds.length === 0) {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'At least one business ID is required when not matching first',
-				);
+		if (useJsonInput) {
+			// Assign business_ids or prospect_ids from JSON input
+			const { business_ids, prospect_ids } = jsonInput;
+			if (type === 'businesses') {
+				body.business_ids = business_ids;
+			} else {
+				body.prospect_ids = prospect_ids;
 			}
 		} else {
-			const prospectIdsCollection = executeFunctions.getNodeParameter(
-				'prospect_ids_collection',
-				0,
-				{ prospect_ids: [] },
-			) as ProspectIds_Collection;
-
-			const prospectIdsList = prospectIdsCollection.prospect_ids || [];
-			entityIds = prospectIdsList.map((x) => x.id);
-
-			if (entityIds.length === 0) {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'At least one prospect ID is required when not matching first',
-				);
+			// Assign business_ids or prospect_ids from form fields
+			if (type === 'businesses') {
+				const collection = executeFunctions.getNodeParameter('business_ids', 0, {
+					business_ids: [],
+				}) as BusinessIds_Collection;
+				body.business_ids = collection.business_ids.map((x) => x.id);
+			} else {
+				const collection = executeFunctions.getNodeParameter('prospect_ids_collection', 0, {
+					prospect_ids: [],
+				}) as ProspectIds_Collection;
+				body.prospect_ids = collection.prospect_ids.map((x) => x.id);
 			}
 		}
 	}
 
-	if (entityIds.length === 0) {
-		throw new NodeOperationError(executeFunctions.getNode(), 'No entity IDs found for events');
+	if (useJsonInput) {
+		// Assign other(non entity related) fields from JSON input
+		const { business_ids, prospect_ids, businesses_to_match, prospects_to_match, ...rest } =
+			jsonInput;
+		Object.assign(body, rest);
+	} else {
+		// Assign other(non entity related) fields from form fields
+		const eventTypes = executeFunctions.getNodeParameter('event_types', 0) as string[];
+		body.event_types = eventTypes;
+
+		const timestampFrom = executeFunctions.getNodeParameter('timestamp_from', 0, '') as string;
+		const timestampTo = executeFunctions.getNodeParameter('timestamp_to', 0, '') as string;
+
+		if (timestampFrom) {
+			body.timestamp_from = timestampFrom;
+		}
+
+		if (timestampTo) {
+			body.timestamp_to = timestampTo;
+		}
+	}
+
+	// Validate required fields
+	if ('business_ids' in body && body.business_ids.filter(Boolean).length === 0) {
+		throw new NodeOperationError(
+			executeFunctions.getNode(),
+			'At least one business ID is required',
+		);
+	}
+
+	if ('prospect_ids' in body && body.prospect_ids.filter(Boolean).length === 0) {
+		throw new NodeOperationError(
+			executeFunctions.getNode(),
+			'At least one prospect ID is required',
+		);
+	}
+
+	if (!body.event_types || body.event_types.length === 0) {
+		throw new NodeOperationError(executeFunctions.getNode(), 'At least one event type is required');
 	}
 
 	const endpoint = type === 'businesses' ? '/v1/businesses/events' : '/v1/prospects/events';
-
-	const requestBody: any = {
-		event_types: eventTypes,
-	};
-
-	requestBody[type === 'businesses' ? 'business_ids' : 'prospect_ids'] = entityIds;
-
-	if (timestampFrom) {
-		requestBody.timestamp_from = timestampFrom;
-	}
-
-	if (timestampTo) {
-		requestBody.timestamp_to = timestampTo;
-	}
 
 	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
 		executeFunctions,
@@ -640,7 +657,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 		{
 			method: 'POST',
 			url: `https://api.explorium.ai${endpoint}`,
-			body: requestBody,
+			body,
 			json: true,
 		},
 	);
@@ -671,7 +688,7 @@ async function executeAutocomplete(
 	return [returnData];
 }
 
-async function extractJsonInput<T>(executeFunctions: IExecuteFunctions): Promise<T> {
+function extractJsonInput<T = any>(executeFunctions: IExecuteFunctions): T {
 	const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
 	try {
 		return typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
