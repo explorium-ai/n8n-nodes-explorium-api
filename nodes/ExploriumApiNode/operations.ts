@@ -1,4 +1,3 @@
-import { INodeProperties } from 'n8n-workflow';
 import {
 	autocompleteFields,
 	businessEnrichmentOptions,
@@ -6,7 +5,7 @@ import {
 	prospectEnrichmentOptions,
 	prospectEventTypes,
 } from './constants';
-import { JsonExample } from './types';
+import { StreamlinedOperation } from './types';
 
 export const operations = {
 	match: {
@@ -136,7 +135,7 @@ export const operations = {
 				],
 			},
 		],
-		examples: [
+		jsonExamples: [
 			{
 				description: 'Match businesses by name and domain to get their Explorium business IDs',
 				default: JSON.stringify(
@@ -420,7 +419,7 @@ export const operations = {
 				],
 			},
 		],
-		examples: [
+		jsonExamples: [
 			{
 				description: 'Enrich businesses using business Explorium IDs',
 				default: JSON.stringify(
@@ -1260,7 +1259,7 @@ export const operations = {
 				displayOptions: { show: { useJsonInput: [false] } },
 			},
 		],
-		examples: [
+		jsonExamples: [
 			{
 				description: 'Fetch businesses or prospects with filters and pagination',
 				default: JSON.stringify(
@@ -1286,7 +1285,7 @@ export const operations = {
 	events: {
 		displayName: 'Events',
 		description: 'Get business or prospect events',
-		examples: [
+		jsonExamples: [
 			{
 				description:
 					'Get business events like IPO announcements and funding rounds using business IDs',
@@ -1568,7 +1567,7 @@ export const operations = {
 				displayOptions: { show: { useJsonInput: [false] } },
 			},
 		],
-		examples: [
+		jsonExamples: [
 			{
 				description: 'Get autocomplete suggestions for a specific field using a search query',
 				default: JSON.stringify(
@@ -1588,10 +1587,3 @@ export const operations = {
 } satisfies Record<string, StreamlinedOperation>;
 
 export type OperationKey = keyof typeof operations;
-
-export type StreamlinedOperation = {
-	displayName: string;
-	description: string;
-	examples?: JsonExample[];
-	properties: INodeProperties[];
-};

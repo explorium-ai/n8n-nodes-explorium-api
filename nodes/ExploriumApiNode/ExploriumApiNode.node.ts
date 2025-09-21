@@ -60,7 +60,6 @@ export class ExploriumApiNode implements INodeType {
 					} as INodeProperties;
 				}),
 			),
-			// Simple advanced JSON input option
 			{
 				displayName: 'Advanced JSON Input',
 				name: 'useJsonInput',
@@ -70,7 +69,7 @@ export class ExploriumApiNode implements INodeType {
 			},
 			// Dynamic JSON input fields for each operation
 			...Object.keys(operations).reduce((acc, operationKey) => {
-				const examples = operations[operationKey as OperationKey].examples;
+				const examples = operations[operationKey as OperationKey].jsonExamples;
 				for (const example of examples) {
 					const { default: exampleDefault, description } = example;
 

@@ -1,3 +1,16 @@
+import { INodeProperties } from 'n8n-workflow';
+
+export type StreamlinedOperation = {
+	displayName: string;
+	description: string;
+	jsonExamples?: Array<{
+		description: string;
+		default: string;
+		displayOptions: { show?: Record<string, any>; hide?: Record<string, any> };
+	}>;
+	properties: INodeProperties[];
+};
+
 export interface BusinessesToMatch {
 	businesses_to_match: Business[];
 }
@@ -34,13 +47,4 @@ export interface BusinessIds_Body {
 
 export interface ProspectIds_Body {
 	prospect_ids: string[];
-}
-
-export interface JsonExample {
-	/** Description shown in tooltip/hover to inform users about the structure */
-	description: string;
-	/** Default JSON value for this example */
-	default: string;
-	/** Display conditions - when this example should be shown */
-	displayOptions: { show?: Record<string, any>; hide?: Record<string, any> };
 }
