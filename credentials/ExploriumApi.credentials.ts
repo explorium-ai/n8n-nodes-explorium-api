@@ -8,7 +8,7 @@ import {
 export class ExploriumApi implements ICredentialType {
 	name = 'exploriumApi';
 	displayName = 'Explorium API';
-	documentationUrl = 'https://docs.explorium.ai';
+	documentationUrl = 'https://developers.explorium.ai';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'Explorium API Key',
