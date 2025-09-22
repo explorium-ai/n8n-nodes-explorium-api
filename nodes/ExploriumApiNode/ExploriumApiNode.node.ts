@@ -215,49 +215,31 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 	const returnData: INodeExecutionData[] = [];
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
 	const enrichments = executeFunctions.getNodeParameter('enrichment', 0) as string[];
-	const shouldMatch = executeFunctions.getNodeParameter('match', 0, false) as boolean;
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
 	let keywordsBody: { parameters?: { keywords: string[] } } | undefined;
 	let body: (BusinessIds_Body & { parameters?: { keywords: string[] } }) | ProspectIds_Body;
 
-	if (shouldMatch) {
-		// executeMatch can handle both JSON input and form fields
-		const matchResult = await executeMatch(executeFunctions);
-		const matchData = matchResult[0][0].json as any;
-
-		if (type === 'businesses') {
-			body = {
-				business_ids: matchData.matched_businesses?.map((match: any) => match.business_id) || [],
-			};
-		} else {
-			body = {
-				prospect_ids: matchData.matched_prospects?.map((match: any) => match.prospect_id) || [],
-			};
-		}
+	if (useJsonInput) {
+		const jsonInput = extractJsonInput(executeFunctions);
+		body = jsonInput;
 	} else {
-		if (useJsonInput) {
-			const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
-			const jsonInputObject = JSON.parse(jsonInput);
-			body = jsonInputObject;
+		if (type === 'businesses') {
+			const collection = executeFunctions.getNodeParameter('business_ids', 0, {
+				business_ids: [],
+			}) as BusinessIds_Collection;
+
+			body = {
+				business_ids: collection.business_ids.map((x) => x.id),
+			};
 		} else {
-			if (type === 'businesses') {
-				const collection = executeFunctions.getNodeParameter('business_ids', 0, {
-					business_ids: [],
-				}) as BusinessIds_Collection;
+			const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
+				prospect_ids: [],
+			}) as ProspectIds_Collection;
 
-				body = {
-					business_ids: collection.business_ids.map((x) => x.id),
-				};
-			} else {
-				const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
-					prospect_ids: [],
-				}) as ProspectIds_Collection;
-
-				body = {
-					prospect_ids: collection.prospect_ids.map((x) => x.id),
-				};
-			}
+			body = {
+				prospect_ids: collection.prospect_ids.map((x) => x.id),
+			};
 		}
 	}
 
@@ -564,56 +546,27 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const returnData: INodeExecutionData[] = [];
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
-	const shouldMatch = executeFunctions.getNodeParameter('match', 0, false) as boolean;
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
-	const jsonInput = extractJsonInput(executeFunctions);
 
 	const body: any = {};
 
-	// Handle business_ids or prospect_ids
-	if (shouldMatch) {
-		// executeMatch can handle both JSON input and form fields
-		const matchResult = await executeMatch(executeFunctions);
-		const matchData = matchResult[0][0].json as any;
-
-		if (type === 'businesses') {
-			body.business_ids =
-				matchData.matched_businesses?.map((match: any) => match.business_id).filter(Boolean) || [];
-		} else {
-			body.prospect_ids =
-				matchData.matched_prospects?.map((match: any) => match.prospect_id).filter(Boolean) || [];
-		}
-	} else {
-		if (useJsonInput) {
-			// Assign business_ids or prospect_ids from JSON input
-			const { business_ids, prospect_ids } = jsonInput;
-			if (type === 'businesses') {
-				body.business_ids = business_ids;
-			} else {
-				body.prospect_ids = prospect_ids;
-			}
-		} else {
-			// Assign business_ids or prospect_ids from form fields
-			if (type === 'businesses') {
-				const collection = executeFunctions.getNodeParameter('business_ids', 0, {
-					business_ids: [],
-				}) as BusinessIds_Collection;
-				body.business_ids = collection.business_ids.map((x) => x.id);
-			} else {
-				const collection = executeFunctions.getNodeParameter('prospect_ids_collection', 0, {
-					prospect_ids: [],
-				}) as ProspectIds_Collection;
-				body.prospect_ids = collection.prospect_ids.map((x) => x.id);
-			}
-		}
-	}
-
 	if (useJsonInput) {
-		// Assign other(non entity related) fields from JSON input
-		const { business_ids, prospect_ids, businesses_to_match, prospects_to_match, ...rest } =
-			jsonInput;
-		Object.assign(body, rest);
+		const jsonInput = extractJsonInput(executeFunctions);
+		Object.assign(body, jsonInput);
 	} else {
+		// Assign business_ids or prospect_ids from form fields
+		if (type === 'businesses') {
+			const collection = executeFunctions.getNodeParameter('business_ids', 0, {
+				business_ids: [],
+			}) as BusinessIds_Collection;
+			body.business_ids = collection.business_ids.map((x) => x.id);
+		} else {
+			const collection = executeFunctions.getNodeParameter('prospect_ids_collection', 0, {
+				prospect_ids: [],
+			}) as ProspectIds_Collection;
+			body.prospect_ids = collection.prospect_ids.map((x) => x.id);
+		}
+
 		// Assign other(non entity related) fields from form fields
 		const eventTypes = executeFunctions.getNodeParameter('event_types', 0) as string[];
 		body.event_types = eventTypes;
@@ -690,6 +643,10 @@ async function executeAutocomplete(
 
 function extractJsonInput<T = any>(executeFunctions: IExecuteFunctions): T {
 	const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
+	if (!jsonInput) {
+		throw new NodeOperationError(executeFunctions.getNode(), 'JSON Input is empty');
+	}
+
 	try {
 		return typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
 	} catch (error) {

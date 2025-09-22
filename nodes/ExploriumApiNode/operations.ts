@@ -227,116 +227,6 @@ export const operations = {
 				displayOptions: { show: { type: ['prospects'] } },
 			},
 			{
-				displayName: 'Match First',
-				name: 'match',
-				type: 'boolean',
-				default: false,
-				description:
-					'Whether to find businesses/prospects before enriching, or use existing Explorium IDs',
-			},
-			{
-				displayName: 'Businesses to Match',
-				name: 'businesses_to_match',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add businesses to match by name and/or domain',
-				displayOptions: { show: { type: ['businesses'], match: [true], useJsonInput: [false] } },
-				options: [
-					{
-						name: 'businesses_to_match',
-						displayName: 'Businesses',
-						values: [
-							{
-								displayName: 'Company Name',
-								name: 'name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. Microsoft',
-								description: 'Name of the company to match',
-							},
-							{
-								displayName: 'Company Domain',
-								name: 'domain',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. microsoft.com',
-								description: 'Domain of the company to match',
-							},
-						],
-					},
-				],
-			},
-			{
-				displayName: 'Prospects to Match',
-				name: 'prospects_to_match',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add prospects to match by various identifiers',
-				displayOptions: { show: { type: ['prospects'], match: [true], useJsonInput: [false] } },
-				options: [
-					{
-						name: 'prospects_to_match',
-						displayName: 'Prospects',
-						values: [
-							{
-								displayName: 'Business ID',
-								name: 'business_id',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
-								description: 'Explorium business ID if known',
-							},
-							{
-								displayName: 'Company Name',
-								name: 'company_name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. Example Corp',
-								description: 'Company name (helps with matching)',
-							},
-							{
-								displayName: 'Email Address',
-								name: 'email',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. john@example.com',
-								description: 'Email address of the prospect',
-							},
-							{
-								displayName: 'Full Name',
-								name: 'full_name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. John Doe',
-								description: 'Full name of the prospect',
-							},
-							{
-								displayName: 'LinkedIn Profile',
-								name: 'linkedin',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. linkedin.com/in/johndoe',
-								description: 'LinkedIn profile URL',
-							},
-							{
-								displayName: 'Phone Number',
-								name: 'phone_number',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g.	+1234567890',
-								description: 'Phone number of the prospect',
-							},
-						],
-					},
-				],
-			},
-			{
 				displayName: 'Business IDs',
 				name: 'business_ids',
 				type: 'fixedCollection',
@@ -345,7 +235,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add business IDs to enrich',
-				displayOptions: { show: { type: ['businesses'], match: [false], useJsonInput: [false] } },
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
 				options: [
 					{
 						displayName: 'ID',
@@ -371,7 +261,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add prospect IDs to enrich',
-				displayOptions: { show: { type: ['prospects'], match: [false], useJsonInput: [false] } },
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'prospect_ids',
@@ -430,7 +320,7 @@ export const operations = {
 					2,
 				),
 				displayOptions: {
-					show: { type: ['businesses'], match: [false] },
+					show: { type: ['businesses'] },
 					hide: { enrichment: ['website_keywords'] },
 				},
 			},
@@ -449,7 +339,6 @@ export const operations = {
 				displayOptions: {
 					show: {
 						type: ['businesses'],
-						match: [false],
 						enrichment: ['website_keywords'],
 					},
 				},
@@ -468,49 +357,7 @@ export const operations = {
 					null,
 					2,
 				),
-				displayOptions: { show: { type: ['prospects'], match: [false] } },
-			},
-			{
-				description: 'Enrich businesses using business info',
-				default: JSON.stringify(
-					{
-						businesses_to_match: [
-							{ name: 'Microsoft', domain: 'microsoft.com' },
-							{ name: 'Apple Inc.', domain: 'apple.com' },
-							{ name: 'Google', domain: 'google.com' },
-						],
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: { type: ['businesses'], match: [true] },
-					hide: { enrichment: ['website_keywords'] },
-				},
-			},
-			{
-				description: 'Enrich businesses using business info (filter by website keywords)',
-				default: JSON.stringify(
-					{
-						businesses_to_match: [
-							{ name: 'Microsoft', domain: 'microsoft.com' },
-							{ name: 'Apple Inc.', domain: 'apple.com' },
-							{ name: 'Google', domain: 'google.com' },
-						],
-						parameters: {
-							keywords: ['software', 'cloud'],
-						},
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['businesses'],
-						match: [true],
-						enrichment: ['website_keywords'],
-					},
-				},
+				displayOptions: { show: { type: ['prospects'] } },
 			},
 			{
 				description: 'Enrich prospects using prospect Explorium IDs',
@@ -526,7 +373,7 @@ export const operations = {
 					null,
 					2,
 				),
-				displayOptions: { show: { type: ['prospects'], match: [false] } },
+				displayOptions: { show: { type: ['prospects'] } },
 			},
 		],
 	},
@@ -1299,119 +1146,6 @@ export const operations = {
 				description: 'Type of events to fetch',
 			},
 			{
-				displayName: 'Match First',
-				name: 'match',
-				type: 'boolean',
-				default: false,
-				description:
-					'Whether to find businesses/prospects before enriching, or use existing Explorium IDs',
-			},
-			// Match fields for business events - using fixedCollection
-			{
-				displayName: 'Businesses to Match',
-				name: 'businesses_to_match',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add businesses to match by name and/or domain',
-				displayOptions: { show: { type: ['businesses'], match: [true], useJsonInput: [false] } },
-				options: [
-					{
-						name: 'businesses_to_match',
-						displayName: 'Business',
-						values: [
-							{
-								displayName: 'Company Name',
-								name: 'name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. Microsoft',
-								description: 'Name of the company',
-							},
-							{
-								displayName: 'Company Domain',
-								name: 'domain',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. microsoft.com',
-								description: 'Domain of the company',
-							},
-						],
-					},
-				],
-			},
-			// Match fields for prospect events - using fixedCollection
-			{
-				displayName: 'Prospects to Match',
-				name: 'prospects_to_match',
-				type: 'fixedCollection',
-				default: {},
-				typeOptions: {
-					multipleValues: true,
-				},
-				description: 'Add prospects to match by various identifiers',
-				displayOptions: { show: { type: ['prospects'], match: [true], useJsonInput: [false] } },
-				options: [
-					{
-						name: 'prospects_to_match',
-						displayName: 'Prospect',
-						values: [
-							{
-								displayName: 'Business ID',
-								name: 'business_id',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. a34bacf839b923770b2c360eefa26748',
-								description: 'Explorium business ID if known',
-							},
-							{
-								displayName: 'Company Name',
-								name: 'company_name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. Example Corp',
-								description: 'Company name (helps with matching)',
-							},
-							{
-								displayName: 'Email Address',
-								name: 'email',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. john@example.com',
-								description: 'Email address of the prospect',
-							},
-							{
-								displayName: 'Full Name',
-								name: 'full_name',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. John Doe',
-								description: 'Full name of the prospect',
-							},
-							{
-								displayName: 'LinkedIn Profile',
-								name: 'linkedin',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g. linkedin.com/in/johndoe',
-								description: 'LinkedIn profile URL',
-							},
-							{
-								displayName: 'Phone Number',
-								name: 'phone_number',
-								type: 'string',
-								default: '',
-								placeholder: 'e.g.	+1234567890',
-								description: 'Phone number of the prospect',
-							},
-						],
-					},
-				],
-			},
-			// ID fields when not matching - using fixedCollection
-			{
 				displayName: 'Business IDs',
 				name: 'business_ids',
 				type: 'fixedCollection',
@@ -1420,7 +1154,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add business IDs for events',
-				displayOptions: { show: { type: ['businesses'], match: [false], useJsonInput: [false] } },
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'business_ids',
@@ -1447,7 +1181,7 @@ export const operations = {
 					multipleValues: true,
 				},
 				description: 'Add prospect IDs for events',
-				displayOptions: { show: { type: ['prospects'], match: [false], useJsonInput: [false] } },
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
 				options: [
 					{
 						name: 'prospect_ids',
@@ -1515,32 +1249,7 @@ export const operations = {
 					2,
 				),
 				displayOptions: {
-					show: {
-						type: ['businesses'],
-						match: [false],
-					},
-				},
-			},
-			{
-				description: 'Get business events by matching companies first using business info',
-				default: JSON.stringify(
-					{
-						businesses_to_match: [
-							{ name: 'Microsoft', domain: 'microsoft.com' },
-							{ name: 'Apple Inc.', domain: 'apple.com' },
-							{ name: 'Google', domain: 'google.com' },
-						],
-						event_types: ['ipo_announcement', 'new_funding_round'],
-						timestamp_from: '2024-01-01',
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['businesses'],
-						match: [true],
-					},
+					show: { type: ['businesses'] },
 				},
 			},
 			{
@@ -1560,36 +1269,7 @@ export const operations = {
 					2,
 				),
 				displayOptions: {
-					show: {
-						type: ['prospects'],
-						match: [false],
-					},
-				},
-			},
-			{
-				description: 'Get prospect events by matching prospects first using prospect info',
-				default: JSON.stringify(
-					{
-						prospects_to_match: [
-							{
-								email: 'omer.prizner@explorium.ai',
-								full_name: 'Omer Prizner',
-								phone_number: '',
-								company_name: '',
-								linkedin: '',
-							},
-						],
-						event_types: ['prospect_changed_role', 'prospect_changed_company'],
-						timestamp_from: '2024-01-01',
-					},
-					null,
-					2,
-				),
-				displayOptions: {
-					show: {
-						type: ['prospects'],
-						match: [true],
-					},
+					show: { type: ['prospects'] },
 				},
 			},
 		],
