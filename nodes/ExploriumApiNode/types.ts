@@ -3,6 +3,7 @@ import { INodeProperties } from 'n8n-workflow';
 export type StreamlinedOperation = {
 	displayName: string;
 	description: string;
+	docsHref?: Array<{ href: string; title: string; displayCondition: string }>;
 	jsonExamples?: Array<{
 		description: string;
 		default: string;

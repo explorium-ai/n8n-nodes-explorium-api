@@ -33,6 +33,18 @@ export class ExploriumApiNode implements INodeType {
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
 		credentials: [{ name: 'exploriumApi', required: true }],
+		hints: Object.entries(operations).flatMap(([key, value]) => {
+			return value.docsHref.map((doc) => ({
+				type: 'info',
+				message: `
+					<a href="${doc.href}" target="_blank">
+						View documentation for ${doc.title}
+					</a>
+				`,
+				whenToDisplay: 'always',
+				displayCondition: doc.displayCondition,
+			}));
+		}),
 		properties: [
 			{
 				displayName: 'Operation',

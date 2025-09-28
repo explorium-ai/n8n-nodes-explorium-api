@@ -11,6 +11,18 @@ export const operations = {
 	match: {
 		displayName: 'Match',
 		description: 'Find and match businesses or prospects to get their Explorium IDs',
+		docsHref: [
+			{
+				href: 'https://developers.explorium.ai/reference/match_businesses',
+				title: 'Match Businesses',
+				displayCondition: `={{$parameter["operation"] === "match" && $parameter["type"] === "businesses"}}`,
+			},
+			{
+				href: 'https://developers.explorium.ai/reference/match_prospects-1',
+				title: 'Match Prospects',
+				displayCondition: `={{$parameter["operation"] === "match" && $parameter["type"] === "prospects"}}`,
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -193,6 +205,7 @@ export const operations = {
 	enrich: {
 		displayName: 'Enrich',
 		description: 'Add additional data to existing records',
+		docsHref: [],
 		properties: [
 			{
 				displayName: 'Type',
@@ -363,6 +376,7 @@ export const operations = {
 	fetch: {
 		displayName: 'Fetch',
 		description: 'Retrieve records with filters and pagination',
+		docsHref: [],
 		properties: [
 			{
 				displayName: 'Type',
@@ -1115,6 +1129,7 @@ export const operations = {
 	events: {
 		displayName: 'Events',
 		description: 'Get business or prospect events',
+		docsHref: [],
 		properties: [
 			{
 				displayName: 'Type',
@@ -1259,6 +1274,7 @@ export const operations = {
 	autocomplete: {
 		displayName: 'Autocomplete',
 		description: 'Get field suggestions and autocomplete values',
+		docsHref: [],
 		properties: [
 			{
 				displayName: 'Field',
