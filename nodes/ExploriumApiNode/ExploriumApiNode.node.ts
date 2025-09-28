@@ -8,17 +8,17 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
+import { enrichmentEndpoints } from './constants';
 import { OperationKey, operations } from './operations';
 import {
 	BusinessesToMatch,
-	ProspectsToMatch,
-	BusinessIds_Collection,
-	ProspectIds_Collection,
 	BusinessIds_Body,
+	BusinessIds_Collection,
 	ProspectIds_Body,
+	ProspectIds_Collection,
+	ProspectsToMatch,
 } from './types';
 import { excludeEmptyValues } from './utils';
-import { enrichmentEndpoints } from './constants';
 
 export class ExploriumApiNode implements INodeType {
 	description: INodeTypeDescription = {
@@ -665,23 +665,67 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 async function executeAutocomplete(
 	executeFunctions: IExecuteFunctions,
 ): Promise<INodeExecutionData[][]> {
-	const returnData: INodeExecutionData[] = [];
-	const field = executeFunctions.getNodeParameter('field', 0) as string;
-	const query = executeFunctions.getNodeParameter('query', 0) as string;
+	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
-	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-		executeFunctions,
-		'exploriumApi',
-		{
-			method: 'GET',
-			url: 'https://api.explorium.ai/v1/businesses/autocomplete',
-			qs: { field, query },
-			json: true,
-		},
-	);
+	let autocompleteRequests: Array<{ field: string; query: string }> = [];
 
-	returnData.push({ json: response });
-	return [returnData];
+	if (useJsonInput) {
+		const jsonInput = extractJsonInput<{
+			autocomplete_requests: Array<{ field: string; query: string }>;
+		}>(executeFunctions);
+		autocompleteRequests = jsonInput.autocomplete_requests || [];
+	} else {
+		const collection = executeFunctions.getNodeParameter('autocomplete_fields', 0, {
+			autocomplete_fields: [],
+		}) as { autocomplete_fields: Array<{ field: string; query: string }> };
+
+		autocompleteRequests = collection.autocomplete_fields || [];
+	}
+
+	if (autocompleteRequests.length === 0) {
+		throw new NodeOperationError(
+			executeFunctions.getNode(),
+			'At least one autocomplete request is required',
+		);
+	}
+
+	const results = [];
+
+	// Process each autocomplete request
+	for (const request of autocompleteRequests) {
+		const { field, query } = request;
+
+		if (!field) {
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				'Field is required for each autocomplete request',
+			);
+		}
+
+		try {
+			const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+				executeFunctions,
+				'exploriumApi',
+				{
+					method: 'GET',
+					url: 'https://api.explorium.ai/v1/businesses/autocomplete',
+					qs: { field, query },
+					json: true,
+				},
+			);
+
+			results.push({
+				field,
+				query,
+				data: response,
+			});
+		} catch (error) {
+			error.description = `${error.description}. Error fetching autocomplete data for ${field} with query ${query}.`;
+			throw error;
+		}
+	}
+
+	return [[{ json: { results } }]];
 }
 
 function extractJsonInput<T = any>(executeFunctions: IExecuteFunctions): T {

@@ -98,11 +98,23 @@ export const prospectEventTypes = [
 
 // Autocomplete field options
 export const autocompleteFields = [
+	{ name: 'Country', value: 'country' },
+	{ name: 'Country Code', value: 'country_code' },
+	{ name: 'Region Country Code', value: 'region_country_code' },
 	{ name: 'Google Category', value: 'google_category' },
-	{ name: 'Industry', value: 'industry' },
-	{ name: 'Technology', value: 'technology' },
-	{ name: 'Location', value: 'location' },
+	{ name: 'NAICS Category', value: 'naics_category' },
+	{ name: 'LinkedIn Category', value: 'linkedin_category' },
+	{ name: 'Company Tech Stack Technology', value: 'company_tech_stack_tech' },
+	{ name: 'Company Tech Stack Categories', value: 'company_tech_stack_categories' },
+	{ name: 'Job Title', value: 'job_title' },
 	{ name: 'Company Size', value: 'company_size' },
+	{ name: 'Company Revenue', value: 'company_revenue' },
+	{ name: 'Number of Locations', value: 'number_of_locations' },
+	{ name: 'Company Age', value: 'company_age' },
+	{ name: 'Job Department', value: 'job_department' },
+	{ name: 'Job Level', value: 'job_level' },
+	{ name: 'City Region Country', value: 'city_region_country' },
+	{ name: 'Company Name', value: 'company_name' },
 ];
 
 // Mapping enrichment types to endpoints
