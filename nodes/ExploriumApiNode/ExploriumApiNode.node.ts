@@ -550,10 +550,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 
 		// Get exclude collection for businesses
 		if (type === 'businesses') {
-			const excludeCollection = executeFunctions.getNodeParameter('exclude', 0, {}) as any;
-			const excludeArray = excludeCollection.exclude || [];
-			const excludeIds = excludeArray.map((item: any) => item.id).filter(Boolean);
-
+			const excludeIds = getCollectionValues('exclude', 'id');
 			if (excludeIds.length > 0) {
 				requestBody.exclude = excludeIds;
 			}
