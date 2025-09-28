@@ -350,23 +350,6 @@ export const operations = {
 						prospect_ids: [
 							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
 							'4c485f009d59e319dc039cdf3e935b85014e6a33',
-							'fd4c46716295a2e4731417eee802a883280e4d57',
-							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
-						],
-					},
-					null,
-					2,
-				),
-				displayOptions: { show: { type: ['prospects'] } },
-			},
-			{
-				description: 'Enrich prospects using prospect Explorium IDs',
-				default: JSON.stringify(
-					{
-						prospect_ids: [
-							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
-							'4c485f009d59e319dc039cdf3e935b85014e6a33',
-							'fd4c46716295a2e4731417eee802a883280e4d57',
 							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
 						],
 					},
@@ -1260,7 +1243,6 @@ export const operations = {
 						prospect_ids: [
 							'20ae6cbf564ee683e66685e429844a5ff8ffc30f',
 							'4c485f009d59e319dc039cdf3e935b85014e6a33',
-							'fd4c46716295a2e4731417eee802a883280e4d57',
 							'a7bbe0674c63338e62ae4c10751ae19da5723e5a',
 						],
 						timestamp_from: '2024-01-01',
