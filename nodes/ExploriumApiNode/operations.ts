@@ -254,7 +254,7 @@ export const operations = {
 			},
 			{
 				displayName: 'Prospect IDs',
-				name: 'prospect_ids_collection',
+				name: 'prospect_ids',
 				type: 'fixedCollection',
 				default: {},
 				typeOptions: {
@@ -1157,7 +1157,7 @@ export const operations = {
 			},
 			{
 				displayName: 'Prospect IDs',
-				name: 'prospect_ids_collection',
+				name: 'prospect_ids',
 				type: 'fixedCollection',
 				default: {},
 				typeOptions: {
