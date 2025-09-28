@@ -592,7 +592,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 			}) as BusinessIds_Collection;
 			body.business_ids = collection.business_ids.map((x) => x.id);
 		} else {
-			const collection = executeFunctions.getNodeParameter('prospect_ids_collection', 0, {
+			const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
 				prospect_ids: [],
 			}) as ProspectIds_Collection;
 			body.prospect_ids = collection.prospect_ids.map((x) => x.id);

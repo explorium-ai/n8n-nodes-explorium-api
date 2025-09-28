@@ -93,7 +93,7 @@ export const businessEventTypes = [
 export const prospectEventTypes = [
 	{ name: 'Role Change', value: 'prospect_changed_role' },
 	{ name: 'Company Change', value: 'prospect_changed_company' },
-	{ name: 'New Position', value: 'new_position' },
+	{ name: 'New Position', value: 'prospect_job_start_anniversary' },
 ];
 
 // Autocomplete field options
