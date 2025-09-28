@@ -212,7 +212,6 @@ async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeE
 }
 
 async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-	const returnData: INodeExecutionData[] = [];
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
 	const enrichments = executeFunctions.getNodeParameter('enrichment', 0) as string[];
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
@@ -276,6 +275,8 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		}
 	}
 
+	const enrichment_responses = [];
+	const enriched_data: any[] = [];
 	// Process each enrichment type
 	for (const enrichment of enrichments) {
 		const endpoint =
@@ -288,8 +289,11 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			);
 		}
 
+		let requestBody: any;
 		if (type === 'businesses' && enrichment === 'website_keywords' && keywordsBody) {
-			body = { ...body, ...keywordsBody };
+			requestBody = { ...body, ...keywordsBody };
+		} else {
+			requestBody = body;
 		}
 
 		const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
@@ -298,20 +302,50 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			{
 				method: 'POST',
 				url: `https://api.explorium.ai${endpoint}`,
-				body,
+				body: requestBody,
 				json: true,
 			},
 		);
 
-		returnData.push({
-			json: {
-				enrichment_type: enrichment,
-				...response,
-			},
+		enrichment_responses.push({
+			enrichment_type: enrichment,
+			response,
 		});
+
+		if (!response.data) {
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				`No data returned for enrichment type: ${enrichment}`,
+			);
+		}
+
+		for (const entity of response.data) {
+			const matchedEntity = enriched_data.find((x) => {
+				if (type === 'businesses') {
+					return x.business_id === entity.business_id;
+				} else {
+					return x.prospect_id === entity.prospect_id;
+				}
+			});
+
+			if (matchedEntity) {
+				Object.assign(matchedEntity.data, entity.data);
+			} else {
+				enriched_data.push(entity);
+			}
+		}
 	}
 
-	return [returnData];
+	return [
+		[
+			{
+				json: {
+					enrichmentsResponse: enrichment_responses,
+					enriched_data,
+				},
+			},
+		],
+	];
 }
 
 async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
