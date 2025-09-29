@@ -233,7 +233,13 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 
 	if (useJsonInput) {
 		const jsonInput = extractJsonInput(executeFunctions);
-		body = jsonInput;
+		if (enrichments.includes('website_keywords')) {
+			const { parameters, ..._body } = jsonInput;
+			keywordsBody = { parameters };
+			body = _body;
+		} else {
+			body = jsonInput;
+		}
 	} else {
 		if (type === 'businesses') {
 			const collection = executeFunctions.getNodeParameter('business_ids', 0, {
@@ -243,6 +249,17 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			body = {
 				business_ids: collection.business_ids.map((x) => x.id),
 			};
+
+			if (enrichments.includes('website_keywords')) {
+				const keywordsCollection = executeFunctions.getNodeParameter('keywords', 0, {
+					keywords: [],
+				}) as { keywords: Array<{ keyword: string }> };
+
+				const keywords =
+					keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];
+
+				keywordsBody = { parameters: { keywords } };
+			}
 		} else {
 			const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
 				prospect_ids: [],
@@ -254,11 +271,23 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		}
 	}
 
-	if ('business_ids' in body && body.business_ids.filter(Boolean).length === 0) {
-		throw new NodeOperationError(
-			executeFunctions.getNode(),
-			'At least one business ID is required',
-		);
+	if ('business_ids' in body) {
+		if (body.business_ids.filter(Boolean).length === 0) {
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				'At least one business ID is required',
+			);
+		}
+
+		if (
+			enrichments.includes('website_keywords') &&
+			keywordsBody!.parameters!.keywords.length === 0
+		) {
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				'At least one website keyword is required',
+			);
+		}
 	}
 
 	if ('prospect_ids' in body && body.prospect_ids.filter(Boolean).length === 0) {
@@ -274,16 +303,6 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			const jsonInputObject = JSON.parse(jsonInput);
 			keywordsBody = { parameters: jsonInputObject.parameters };
 		} else {
-			const keywordsCollection = executeFunctions.getNodeParameter('keywords', 0, {
-				keywords: [],
-			}) as { keywords: Array<{ keyword: string }> };
-
-			const keywords =
-				keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];
-
-			if (keywords.length > 0) {
-				keywordsBody = { parameters: { keywords } };
-			}
 		}
 	}
 
@@ -302,7 +321,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		}
 
 		let requestBody: any;
-		if (type === 'businesses' && enrichment === 'website_keywords' && keywordsBody) {
+		if (type === 'businesses' && enrichment === 'website_keywords') {
 			requestBody = { ...body, ...keywordsBody };
 		} else {
 			requestBody = body;
