@@ -205,7 +205,18 @@ export const operations = {
 	enrich: {
 		displayName: 'Enrich',
 		description: 'Add additional data to existing records',
-		docsHref: [],
+		docsHref: [
+			{
+				href: 'https://developers.explorium.ai/reference/businesses_enrichments',
+				title: 'Enrich Businesses',
+				displayCondition: `={{$parameter["operation"] === "enrich" && $parameter["type"] === "businesses"}}`,
+			},
+			{
+				href: 'https://developers.explorium.ai/reference/prospects_enrichments',
+				title: 'Enrich Prospects',
+				displayCondition: `={{$parameter["operation"] === "enrich" && $parameter["type"] === "prospects"}}`,
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -376,7 +387,18 @@ export const operations = {
 	fetch: {
 		displayName: 'Fetch',
 		description: 'Retrieve records with filters and pagination',
-		docsHref: [],
+		docsHref: [
+			{
+				href: 'https://developers.explorium.ai/reference/fetch_businesses',
+				title: 'Fetch Businesses',
+				displayCondition: `={{$parameter["operation"] === "fetch" && $parameter["type"] === "businesses"}}`,
+			},
+			{
+				href: 'https://developers.explorium.ai/reference/fetch_prospects',
+				title: 'Fetch Prospects',
+				displayCondition: `={{$parameter["operation"] === "fetch" && $parameter["type"] === "prospects"}}`,
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
@@ -1129,7 +1151,18 @@ export const operations = {
 	events: {
 		displayName: 'Events',
 		description: 'Get business or prospect events',
-		docsHref: [],
+		docsHref: [
+			{
+				href: 'https://developers.explorium.ai/reference/fetch_businesses_events',
+				title: 'Business Events',
+				displayCondition: `={{$parameter["operation"] === "events" && $parameter["type"] === "businesses"}}`,
+			},
+			{
+				href: 'https://developers.explorium.ai/reference/fetch_prospects_events-1',
+				title: 'Prospect Events',
+				displayCondition: `={{$parameter["operation"] === "events" && $parameter["type"] === "prospects"}}`,
+			},
+		],
 		properties: [
 			{
 				displayName: 'Type',
