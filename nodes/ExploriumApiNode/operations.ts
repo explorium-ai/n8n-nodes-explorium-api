@@ -1345,7 +1345,7 @@ export const operations = {
 								name: 'query',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g. software',
+								placeholder: 'e.g. search term for your field',
 								description: 'Search term for autocomplete',
 							},
 						],
