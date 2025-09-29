@@ -247,7 +247,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			}) as BusinessIds_Collection;
 
 			body = {
-				business_ids: collection.business_ids.map((x) => x.id),
+				business_ids: collection.business_ids?.map((x) => x.id) || [],
 			};
 
 			if (enrichments.includes('website_keywords')) {
@@ -621,12 +621,12 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 			const collection = executeFunctions.getNodeParameter('business_ids', 0, {
 				business_ids: [],
 			}) as BusinessIds_Collection;
-			body.business_ids = collection.business_ids.map((x) => x.id);
+			body.business_ids = collection.business_ids?.map((x) => x.id) || [];
 		} else {
 			const collection = executeFunctions.getNodeParameter('prospect_ids', 0, {
 				prospect_ids: [],
 			}) as ProspectIds_Collection;
-			body.prospect_ids = collection.prospect_ids.map((x) => x.id);
+			body.prospect_ids = collection.prospect_ids?.map((x) => x.id) || [];
 		}
 
 		// Assign other(non entity related) fields from form fields
