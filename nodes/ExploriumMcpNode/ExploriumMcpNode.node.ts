@@ -63,8 +63,7 @@ export class ExploriumMcpNode implements INodeType {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 
-		// Get credentials
-		const openAiCredentials = await this.getCredentials('openAiApi');
+		// Get Explorium credentials for MCP server headers
 		const exploriumCredentials = await this.getCredentials('exploriumApi');
 
 		for (let i = 0; i < items.length; i++) {
@@ -89,13 +88,9 @@ export class ExploriumMcpNode implements INodeType {
 			};
 
 			try {
-				const response = await this.helpers.httpRequest({
+				const response = await this.helpers.httpRequestWithAuthentication.call(this, 'openAiApi', {
 					method: 'POST',
 					url: 'https://api.openai.com/v1/responses',
-					headers: {
-						'Content-Type': 'application/json',
-						Authorization: `Bearer ${openAiCredentials.openAiApiKey}`,
-					},
 					body: requestBody,
 					json: true,
 				});
