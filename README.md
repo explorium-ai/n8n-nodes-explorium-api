@@ -38,9 +38,9 @@ The MCP node additionally requires:
 
 ### Getting Your API Keys
 
-1. **Explorium API Key**
    - Visit [Explorium Developer Portal](https://developers.explorium.ai/reference/quick-starts)
    - Follow the steps to obtain your API key
+
    ![Get the Explorium api key](./assets/get-explorium-api-key.png)
 
 ### Node Configuration
@@ -53,12 +53,21 @@ Example of configuring the node for Firmographic enrichment:
 Here's how to use the node in your workflow:
 ![Explorium MCP use example](./assets/use-the-node.png)
 
+
+## Templates
+
+Find ready-to-use templates on the Explorium n8n Creator page and in our integrations-templates repository.
+
+Explorium n8n Creator page: https://n8n.io/creators/explorium/
+
+Integrations Templates GitHub repo: https://github.com/explorium-ai/integrations-templates
+
 ## Resources
 
 - [n8n Community Nodes Documentation](https://docs.n8n.io/integrations/community-nodes/)
-- [Model Context Protocol Documentation](https://modelcontextprotocol.io/docs/)
 - [Explorium Developer Documentation](https://developers.explorium.ai/)
-- [AgentSource MCP Reference](https://developers.explorium.ai/reference/agentsource-mcp)
+- [Model Context Protocol Documentation](https://modelcontextprotocol.io/docs/)
+- [AgentSource MCP Documentation](https://developers.explorium.ai/mcp-docs/agentsource-mcp)
 
 ## License
 
