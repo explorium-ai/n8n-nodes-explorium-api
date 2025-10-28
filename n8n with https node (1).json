@@ -1,0 +1,160 @@
+{
+  "name": "Search Business Prospects with Natural Language using Open AI and Explorium MCP",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        1520
+      ],
+      "id": "8677896c-1bab-4a6b-a755-030e2dacdc20",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all(); // ambil semua input\nlet results = [];\n\nfor (const item of items) {\n  const dataArray = item.json.data || [];\n  \n  // Loop setiap objek di dalam \"data\"\n  for (const d of dataArray) {\n    results.push({ json: d });\n  }\n}\n\n// Kembalikan hasil agar node berikutnya dapat 1 item per data\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -832,
+        1520
+      ],
+      "id": "32807eda-190b-46bb-92fb-b3ee2a2bc2a6",
+      "name": "Extract data array1"
+    },
+    {
+      "parameters": {
+        "operation": "fetch",
+        "type": "prospects",
+        "useJsonInput": true,
+        "jsonInput": "{\n  \"mode\": \"preview\",\n  \"size\": 5,\n  \"page_size\": 5,\n  \"page\": 1,\n  \"filters\": {\n    \"country_code\": {\n      \"values\": [\n        \"cn\"\n      ]\n    },\n    \"company_size\": {\n      \"values\": [\n        \"1-10\",\n        \"11-50\",\n        \"51-200\",\n        \"201-500\"\n      ]\n    },\n    \"company_revenue\": {\n      \"values\": [\n        \"0-500K\",\n        \"500K-1M\",\n        \"1M-5M\",\n        \"5M-10M\",\n        \"10M-25M\",\n        \"25M-75M\"\n      ]\n    },\n    \"job_department\": {\n      \"values\": [\n        \"Engineering\",\n        \"Operations\",\n        \"Design\",\n        \"Legal\"\n      ]\n    },\n    \"has_email\": {\n      \"value\": true\n    },\n    \"has_phone_number\": {\n      \"value\": true\n    }\n  }\n}"
+      },
+      "type": "@exploriumai/n8n-nodes-explorium-ai.exploriumApiNode",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        1520
+      ],
+      "id": "eaac9dc4-3793-4116-9626-4bf7e738acf8",
+      "name": "Get Leads Propspect1",
+      "credentials": {
+        "exploriumApi": {
+          "id": "TC6B1fXyDpgWgjwn",
+          "name": "Explorium account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.explorium.ai/v1/prospects/contacts_information/bulk_enrich",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prospect_ids\": [{{ JSON.stringify($json.prospect_id) }}]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -608,
+        1520
+      ],
+      "id": "8e9064e8-20fb-4d99-b051-e767d951d802",
+      "name": "Bulk Enrichment API Call",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BYgwBPhCiYrsFBOD",
+          "name": "Header Auth - Partner Service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        1520
+      ],
+      "id": "0af28d84-b10a-4203-9a93-2ca68d2ba58c",
+      "name": "Split Out"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Get Leads Propspect1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract data array1": {
+      "main": [
+        [
+          {
+            "node": "Bulk Enrichment API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Leads Propspect1": {
+      "main": [
+        [
+          {
+            "node": "Extract data array1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bulk Enrichment API Call": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "41ffdee8-bc7d-4d82-bf96-75bd9480f1e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0a70652f43c1b29dd16c35b61a38fd31c8004f58bc7e723bf43262a797407c77"
+  },
+  "id": "i0oPxdWc2eFanWpw",
+  "tags": []
+}

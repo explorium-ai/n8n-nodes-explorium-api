@@ -109,6 +109,8 @@ export class ExploriumApiNode implements INodeType {
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+		validateSingleValueInput(this, 'operation');
+
 		const returnData: INodeExecutionData[] = [];
 		const operation = this.getNodeParameter('operation', 0) as OperationKey;
 
@@ -143,11 +145,14 @@ export class ExploriumApiNode implements INodeType {
 
 async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const returnData: INodeExecutionData[] = [];
+	validateSingleValueInput(executeFunctions, 'type');
+	validateSingleValueInput(executeFunctions, 'useJsonInput');
+
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
 	let endpoint: string;
-	let requestBody: any;
+	let requestBody: BusinessesToMatch | ProspectsToMatch;
 
 	if (type === 'businesses') {
 		endpoint = '/v1/businesses/match';
@@ -157,7 +162,7 @@ async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			businessesToMatch = extractJsonInput<BusinessesToMatch>(executeFunctions);
 		} else {
 			businessesToMatch = executeFunctions.getNodeParameter('businesses_to_match', 0, {
-				businesses: [],
+				businesses_to_match: [],
 			}) as BusinessesToMatch;
 		}
 
@@ -208,18 +213,41 @@ async function executeMatch(executeFunctions: IExecuteFunctions): Promise<INodeE
 		};
 	}
 
-	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-		executeFunctions,
-		'exploriumApi',
-		{
-			method: 'POST',
-			url: `https://api.explorium.ai${endpoint}`,
-			body: requestBody,
-			json: true,
-		},
-	);
+	// Partner service limit.
+	const limit = 50;
+	const batchesLength =
+		'businesses_to_match' in requestBody
+			? Math.ceil((requestBody.businesses_to_match?.length || 0) / limit)
+			: Math.ceil((requestBody.prospects_to_match?.length || 0) / limit);
 
-	returnData.push({ json: response });
+	for (let i = 0; i < batchesLength; i++) {
+		const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+			executeFunctions,
+			'exploriumApi',
+			{
+				method: 'POST',
+				url: `https://api.explorium.ai${endpoint}`,
+				body:
+					'businesses_to_match' in requestBody
+						? {
+								businesses_to_match: requestBody.businesses_to_match?.slice(
+									i * limit,
+									(i + 1) * limit,
+								),
+							}
+						: {
+								prospects_to_match: requestBody.prospects_to_match?.slice(
+									i * limit,
+									(i + 1) * limit,
+								),
+							},
+				json: true,
+			},
+		);
+
+		returnData.push({ json: response });
+	}
+
 	return [returnData];
 }
 
@@ -230,9 +258,10 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 
 	let keywordsBody: { parameters?: { keywords: string[] } } | undefined;
 	let body: (BusinessIds_Body & { parameters?: { keywords: string[] } }) | ProspectIds_Body;
+	let jsonInput: any;
 
 	if (useJsonInput) {
-		const jsonInput = extractJsonInput(executeFunctions);
+		jsonInput = extractJsonInput(executeFunctions);
 		if (enrichments.includes('website_keywords')) {
 			const { parameters, ..._body } = jsonInput;
 			keywordsBody = { parameters };
@@ -297,15 +326,6 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		);
 	}
 
-	if (type === 'businesses' && enrichments.includes('website_keywords')) {
-		if (useJsonInput) {
-			const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
-			const jsonInputObject = JSON.parse(jsonInput);
-			keywordsBody = { parameters: jsonInputObject.parameters };
-		} else {
-		}
-	}
-
 	const enrichment_responses = [];
 	const enriched_data: any[] = [];
 	// Process each enrichment type
@@ -320,49 +340,58 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			);
 		}
 
-		let requestBody: any;
-		if (type === 'businesses' && enrichment === 'website_keywords') {
-			requestBody = { ...body, ...keywordsBody };
-		} else {
-			requestBody = body;
-		}
-
-		const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-			executeFunctions,
-			'exploriumApi',
-			{
-				method: 'POST',
-				url: `https://api.explorium.ai${endpoint}`,
-				body: requestBody,
-				json: true,
-			},
+		// Partner service limit.
+		const limit = 50;
+		const batchesLength = Math.ceil(
+			'business_ids' in body ? body.business_ids.length : body.prospect_ids.length / limit,
 		);
 
-		enrichment_responses.push({
-			enrichment_type: enrichment,
-			response,
-		});
+		for (let i = 0; i < batchesLength; i++) {
+			const chunkBody =
+				'business_ids' in body
+					? { ...body, business_ids: body.business_ids.slice(i * limit, (i + 1) * limit) }
+					: { ...body, prospect_ids: body.prospect_ids.slice(i * limit, (i + 1) * limit) };
+			if (type === 'businesses' && enrichment === 'website_keywords') {
+				Object.assign(chunkBody, keywordsBody);
+			}
 
-		if (!response.data) {
-			throw new NodeOperationError(
-				executeFunctions.getNode(),
-				`No data returned for enrichment type: ${enrichment}`,
+			const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+				executeFunctions,
+				'exploriumApi',
+				{
+					method: 'POST',
+					url: `https://api.explorium.ai${endpoint}`,
+					body: chunkBody,
+					json: true,
+				},
 			);
-		}
 
-		for (const entity of response.data) {
-			const matchedEntity = enriched_data.find((x) => {
-				if (type === 'businesses') {
-					return x.business_id === entity.business_id;
-				} else {
-					return x.prospect_id === entity.prospect_id;
-				}
+			enrichment_responses.push({
+				enrichment_type: enrichment,
+				response,
 			});
 
-			if (matchedEntity) {
-				Object.assign(matchedEntity.data, entity.data);
-			} else {
-				enriched_data.push(entity);
+			if (!response.data) {
+				throw new NodeOperationError(
+					executeFunctions.getNode(),
+					`No data returned for enrichment type: ${enrichment}`,
+				);
+			}
+
+			for (const entity of response.data) {
+				const matchedEntity = enriched_data.find((x) => {
+					if (type === 'businesses') {
+						return x.business_id === entity.business_id;
+					} else {
+						return x.prospect_id === entity.prospect_id;
+					}
+				});
+
+				if (matchedEntity) {
+					Object.assign(matchedEntity.data, entity.data);
+				} else {
+					enriched_data.push(entity);
+				}
 			}
 		}
 	}
@@ -381,6 +410,11 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 
 async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const returnData: INodeExecutionData[] = [];
+	validateSingleValueInput(executeFunctions, 'type');
+	validateSingleValueInput(executeFunctions, 'useJsonInput');
+	// In this specific case we support only one json input.
+	validateSingleValueInput(executeFunctions, 'jsonInput');
+
 	const type = executeFunctions.getNodeParameter('type', 0) as string;
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
@@ -607,6 +641,9 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 
 async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const returnData: INodeExecutionData[] = [];
+	validateSingleValueInput(executeFunctions, 'type');
+	validateSingleValueInput(executeFunctions, 'useJsonInput');
+
 	const type = executeFunctions.getNodeParameter('type', 0) as 'businesses' | 'prospects';
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
@@ -666,24 +703,45 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 
 	const endpoint = type === 'businesses' ? '/v1/businesses/events' : '/v1/prospects/events';
 
-	const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-		executeFunctions,
-		'exploriumApi',
-		{
-			method: 'POST',
-			url: `https://api.explorium.ai${endpoint}`,
-			body,
-			json: true,
-		},
+	// Partner service limit.
+	const limit = 40;
+	const batchesLength = Math.ceil(
+		'business_ids' in body ? body.business_ids.length : body.prospect_ids.length / limit,
 	);
 
-	returnData.push({ json: response });
+	for (let i = 0; i < batchesLength; i++) {
+		const chunkBody = { ...body };
+
+		if ('business_ids' in body) {
+			chunkBody.business_ids = body.business_ids.slice(i * limit, (i + 1) * limit);
+		} else {
+			chunkBody.prospect_ids = body.prospect_ids.slice(i * limit, (i + 1) * limit);
+		}
+
+		const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+			executeFunctions,
+			'exploriumApi',
+			{
+				method: 'POST',
+				url: `https://api.explorium.ai${endpoint}`,
+				body: chunkBody,
+				json: true,
+			},
+		);
+
+		// @ts-ignore
+		console.log('chunk res', i, response);
+		returnData.push({ json: response });
+	}
+
 	return [returnData];
 }
 
 async function executeAutocomplete(
 	executeFunctions: IExecuteFunctions,
 ): Promise<INodeExecutionData[][]> {
+	validateSingleValueInput(executeFunctions, 'useJsonInput');
+
 	const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', 0, false) as boolean;
 
 	let autocompleteRequests: Array<{ field: string; query: string }> = [];
@@ -694,6 +752,7 @@ async function executeAutocomplete(
 		}>(executeFunctions);
 		autocompleteRequests = jsonInput.autocomplete_requests || [];
 	} else {
+		validateSingleValueInput(executeFunctions, 'autocomplete_fields');
 		const collection = executeFunctions.getNodeParameter('autocomplete_fields', 0, {
 			autocomplete_fields: [],
 		}) as { autocomplete_fields: Array<{ field: string; query: string }> };
@@ -747,18 +806,87 @@ async function executeAutocomplete(
 	return [[{ json: { results } }]];
 }
 
-function extractJsonInput<T = any>(executeFunctions: IExecuteFunctions): T {
-	const jsonInput = executeFunctions.getNodeParameter('jsonInput', 0) as string;
-	if (!jsonInput) {
+function extractJsonInput<T extends object = any>(executeFunctions: IExecuteFunctions): T {
+	const inputsLength = executeFunctions.getInputData().length;
+	const jsonInput: T = {} as T;
+
+	for (let i = 0; i < inputsLength; i++) {
+		const jsonInputStr = executeFunctions.getNodeParameter('jsonInput', i) as string;
+		try {
+			const currentJsonInput =
+				typeof jsonInputStr === 'string' ? JSON.parse(jsonInputStr) : jsonInputStr;
+			/// Merge deeply the current json input with the json input
+			function mergeDeep(target: any, source: any): any {
+				for (const key in source) {
+					if (typeof source[key] === 'object') {
+						if (!target[key]) {
+							target[key] = source[key];
+						} else {
+							mergeDeep(target[key], source[key]);
+						}
+					} else {
+						if (Array.isArray(target)) {
+							target.push(source[key]);
+						} else {
+							target[key] = source[key];
+						}
+					}
+				}
+				return target;
+			}
+			mergeDeep(jsonInput, currentJsonInput);
+		} catch (error) {
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				'Invalid JSON format in JSON Input field',
+			);
+		}
+	}
+
+	if (Object.keys(jsonInput).length === 0) {
 		throw new NodeOperationError(executeFunctions.getNode(), 'JSON Input is empty');
 	}
 
-	try {
-		return typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
-	} catch (error) {
-		throw new NodeOperationError(
-			executeFunctions.getNode(),
-			'Invalid JSON format in JSON Input field',
-		);
+	return jsonInput;
+}
+
+function validateSingleValueInput(executeFunctions: IExecuteFunctions, name: string): void {
+	const input = executeFunctions.getInputData();
+
+	let value: string | undefined;
+	for (const item of input) {
+		const json = item.json;
+		if (value && value !== json[name]) {
+			if (typeof value === 'object') {
+				// Deep equal check.
+				function deepEqual(a: any, b: any) {
+					if (a === b) return true;
+					if (a == null || b == null) return false;
+					if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+					const keysA = Object.keys(a);
+					const keysB = Object.keys(b);
+
+					if (keysA.length !== keysB.length) return false;
+
+					for (let key of keysA) {
+						if (!keysB.includes(key)) return false;
+						if (!deepEqual(a[key], b[key])) return false;
+					}
+
+					return true;
+				}
+
+				if (deepEqual(value, json[name])) {
+					continue;
+				}
+			}
+
+			throw new NodeOperationError(
+				executeFunctions.getNode(),
+				`All items of ${name} must have the same value`,
+			);
+		}
+		value = json[name] as string;
 	}
 }
