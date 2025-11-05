@@ -340,16 +340,10 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 			enrichment_responses.push({
 				enrichment_type: enrichment,
 				response,
+				hasData: Boolean(response.data && response.data.length > 0),
 			});
 
-			if (!response.data) {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					`No data returned for enrichment type: ${enrichment}`,
-				);
-			}
-
-			for (const entity of response.data) {
+			for (const entity of response.data || []) {
 				const matchedEntity = enriched_data.find((x) => {
 					if (type === 'businesses') {
 						return x.business_id === entity.business_id;
