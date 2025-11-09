@@ -4,7 +4,7 @@ import {
 	type INodeProperties,
 	type INodeType,
 	type INodeTypeDescription,
-	NodeConnectionType,
+	NodeConnectionTypes,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -30,8 +30,8 @@ export class ExploriumApiNode implements INodeType {
 		subtitle: '={{$parameter["operation"]}}',
 		description: 'Streamlined interface for Explorium API operations',
 		defaults: { name: 'Explorium API' },
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'exploriumApi', required: true }],
 		hints: Object.entries(operations).flatMap(([key, value]) => {
 			return value.docsHref.map((doc) => ({

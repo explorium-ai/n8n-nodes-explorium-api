@@ -4,7 +4,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeConnectionType } from 'n8n-workflow';
+import { NodeConnectionTypes } from 'n8n-workflow';
 
 export class ExploriumMcpNode implements INodeType {
 	description: INodeTypeDescription = {
@@ -17,8 +17,8 @@ export class ExploriumMcpNode implements INodeType {
 		defaults: {
 			name: 'Explorium MCP',
 		},
-		inputs: [NodeConnectionType.Main],
-		outputs: [NodeConnectionType.Main],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{ name: 'openAiApi', required: true },
 			{ name: 'exploriumApi', required: true },
@@ -78,7 +78,8 @@ export class ExploriumMcpNode implements INodeType {
 						type: 'mcp',
 						require_approval: requireApproval,
 						server_label: 'explorium',
-						server_url: 'https://mcp.explorium.ai/sse',
+						server_description: 'Discover companies, contacts, and business insights—powered by dozens of trusted external data sources',
+						server_url: 'https://mcp-n8n.explorium.ai/mcp',
 						headers: {
 							api_key: exploriumCredentials.exploriumApiKey,
 						},
