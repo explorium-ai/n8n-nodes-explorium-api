@@ -20,7 +20,7 @@ export class ExploriumMcpNode implements INodeType {
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [
-			{ name: 'openAiApi', required: true },
+			{ name: 'exploriumOpenAiApi', required: true },
 			{ name: 'exploriumApi', required: true },
 		],
 		properties: [
@@ -78,7 +78,8 @@ export class ExploriumMcpNode implements INodeType {
 						type: 'mcp',
 						require_approval: requireApproval,
 						server_label: 'explorium',
-						server_description: 'Discover companies, contacts, and business insights—powered by dozens of trusted external data sources',
+						server_description:
+							'Discover companies, contacts, and business insights—powered by dozens of trusted external data sources',
 						server_url: 'https://mcp-n8n.explorium.ai/mcp',
 						headers: {
 							api_key: exploriumCredentials.exploriumApiKey,
@@ -89,12 +90,16 @@ export class ExploriumMcpNode implements INodeType {
 			};
 
 			try {
-				const response = await this.helpers.httpRequestWithAuthentication.call(this, 'openAiApi', {
-					method: 'POST',
-					url: 'https://api.openai.com/v1/responses',
-					body: requestBody,
-					json: true,
-				});
+				const response = await this.helpers.httpRequestWithAuthentication.call(
+					this,
+					'exploriumOpenAiApi',
+					{
+						method: 'POST',
+						url: 'https://api.openai.com/v1/responses',
+						body: requestBody,
+						json: true,
+					},
+				);
 
 				const finalMessage = extractFinalAssistantMessage(response);
 

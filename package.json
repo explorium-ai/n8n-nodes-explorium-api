@@ -33,7 +33,7 @@
 		"n8nNodesApiVersion": 1,
 		"credentials": [
 			"dist/credentials/ExploriumApi.credentials.js",
-			"dist/credentials/OpenAiApi.credentials.js"
+			"dist/credentials/ExploriumOpenAiApi.credentials.js"
 		],
 		"nodes": [
 			"dist/nodes/ExploriumApiNode/ExploriumApiNode.node.js",
