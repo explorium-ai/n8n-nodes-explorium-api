@@ -482,33 +482,33 @@ export const operations = {
 					},
 				],
 			},
-			// {
-			// 	displayName: 'Region Country Codes',
-			// 	name: 'region_country_code',
-			// 	type: 'fixedCollection',
-			// 	default: {},
-			// 	typeOptions: {
-			// 		multipleValues: true,
-			// 	},
-			// 	description: 'Filter by region using ISO 3166-2 codes (e.g. "us-ca", "us-tx")',
-			// 	displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
-			// 	options: [
-			// 		{
-			// 			name: 'region_country_code',
-			// 			displayName: 'Region Codes',
-			// 			values: [
-			// 				{
-			// 					displayName: 'Region Code',
-			// 					name: 'code',
-			// 					type: 'string',
-			// 					default: '',
-			// 					placeholder: 'e.g. us-ca',
-			// 					description: 'Country-region code format',
-			// 				},
-			// 			],
-			// 		},
-			// 	],
-			// },
+			{
+				displayName: 'Region Country Codes',
+				name: 'region_country_code',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by region using ISO 3166-2 codes (e.g. "us-ca", "us-tx")',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'region_country_code',
+						displayName: 'Region Codes',
+						values: [
+							{
+								displayName: 'Region Code',
+								name: 'code',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. us-ca',
+								description: 'Country-region code format',
+							},
+						],
+					},
+				],
+			},
 			{
 				displayName: 'Cities',
 				name: 'city_region_country',
@@ -877,7 +877,7 @@ export const operations = {
 				typeOptions: {
 					multipleValues: true,
 				},
-				description: 'Filter companies by intent topics (e.g., "CRM: CRM Management")',
+				description: 'Filter companies by intent topics (e.g. "crm: crm management", "sales: sales automation")',
 				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
 				options: [
 					{
@@ -889,7 +889,7 @@ export const operations = {
 								name: 'topic',
 								type: 'string',
 								default: '',
-								placeholder: 'e.g. CRM: CRM Management',
+								placeholder: 'e.g. crm: crm management',
 								description: 'Intent topic in format "Category: Topic"',
 							},
 						],
@@ -1242,7 +1242,7 @@ export const operations = {
 						page: 1,
 						filters: {
 							business_intent_topics: {
-								topics: ['CRM: CRM Management', 'Sales: Sales Automation'],
+								topics: ['crm: crm management', 'sales: sales automation'],
 								topic_intent_level: 'emerging_intent',
 							},
 						},
