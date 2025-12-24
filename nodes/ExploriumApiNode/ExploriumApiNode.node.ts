@@ -486,6 +486,23 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 				if (websiteKeywords.length > 0) {
 					filters.website_keywords = { values: websiteKeywords };
 				}
+
+				// Business intent topics
+				const businessIntentTopics = getCollectionValues('business_intent_topics', 'topic');
+				if (businessIntentTopics.length > 0) {
+					const businessIntentTopicsFilter: any = {
+						topics: businessIntentTopics,
+					};
+					const topicIntentLevel = executeFunctions.getNodeParameter(
+						'business_intent_topics_topic_intent_level',
+						i,
+						'',
+					) as string;
+					if (topicIntentLevel) {
+						businessIntentTopicsFilter.topic_intent_level = topicIntentLevel;
+					}
+					filters.business_intent_topics = businessIntentTopicsFilter;
+				}
 			}
 
 			if (type === 'prospects') {
@@ -505,6 +522,23 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 				const jobDepartments = getCollectionValues('job_department', 'department');
 				if (jobDepartments.length > 0) {
 					filters.job_department = { values: jobDepartments };
+				}
+
+				// Job titles
+				const jobTitles = getCollectionValues('job_title', 'title');
+				if (jobTitles.length > 0) {
+					const jobTitleFilter: any = {
+						values: jobTitles,
+					};
+					const includeRelated = executeFunctions.getNodeParameter(
+						'include_related_job_titles',
+						i,
+						false,
+					) as boolean;
+					if (includeRelated) {
+						jobTitleFilter.include_related_job_titles = includeRelated;
+					}
+					filters.job_title = jobTitleFilter;
 				}
 
 				// Has email - boolean field
@@ -732,9 +766,9 @@ async function executeAutocomplete(
 					executeFunctions,
 					'exploriumApi',
 					{
-						method: 'GET',
-						url: 'https://api.explorium.ai/v1/businesses/autocomplete',
-						qs: { field, query },
+						method: 'POST',
+						url: 'https://api.explorium.ai/v1/autocomplete',
+						body: { field, query },
 						json: true,
 					},
 				);
