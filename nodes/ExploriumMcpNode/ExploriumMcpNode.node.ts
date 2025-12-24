@@ -28,7 +28,7 @@ export class ExploriumMcpNode implements INodeType {
 				displayName: 'Model',
 				name: 'model',
 				type: 'string',
-				default: 'gpt-4.1',
+				default: 'gpt-5.2',
 				required: true,
 				description: 'The OpenAI model to use',
 			},
