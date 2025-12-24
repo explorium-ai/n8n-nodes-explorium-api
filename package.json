@@ -20,7 +20,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc && gulp build:icons",
-		"dev": "tsc --watch",
+		"dev": "nodemon --watch nodes --watch credentials --ext ts --exec \"npm run build && n8n start\"",
 		"format": "prettier nodes credentials --write",
 		"lint": "eslint nodes credentials package.json",
 		"lintfix": "eslint nodes credentials package.json --fix",
