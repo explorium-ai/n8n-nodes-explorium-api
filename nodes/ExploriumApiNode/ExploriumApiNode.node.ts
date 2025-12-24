@@ -766,9 +766,9 @@ async function executeAutocomplete(
 					executeFunctions,
 					'exploriumApi',
 					{
-						method: 'POST',
-						url: 'https://api.explorium.ai/v1/autocomplete',
-						body: { field, query },
+						method: 'GET',
+						url: 'https://api.explorium.ai/v1/businesses/autocomplete',
+						qs: { field, query },
 						json: true,
 					},
 				);
