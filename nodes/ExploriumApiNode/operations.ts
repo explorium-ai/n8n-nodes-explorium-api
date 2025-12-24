@@ -413,6 +413,13 @@ export const operations = {
 				description: 'Type of entities to fetch',
 			},
 			{
+				displayName: 'Extract Data',
+				name: 'extractData',
+				type: 'boolean',
+				default: false,
+				description: 'Set to false to return the whole response, or true to return only the data field contents as separate items',
+			},
+			{
 				displayName: 'Mode',
 				name: 'mode',
 				type: 'options',
@@ -1176,6 +1183,13 @@ export const operations = {
 				default: 'businesses',
 				required: true,
 				description: 'Type of events to fetch',
+			},
+			{
+				displayName: 'Extract Data',
+				name: 'extractData',
+				type: 'boolean',
+				default: false,
+				description: 'Set to false to return the whole response, or true to return only the data field contents as separate items',
 			},
 			{
 				displayName: 'Business IDs',
