@@ -877,7 +877,7 @@ export const operations = {
 				typeOptions: {
 					multipleValues: true,
 				},
-				description: 'Filter companies by intent topics (e.g. "crm: crm management", "sales: sales automation")',
+				description: 'Filter companies by intent topics (e.g. "crm: crm management", "sales: sales automation"). Multiple topics can be provided.',
 				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
 				options: [
 					{
@@ -906,7 +906,7 @@ export const operations = {
 					{ name: 'Very High Intent', value: 'very_high_intent' },
 				],
 				default: 'emerging_intent',
-				description: 'Minimum intent level filter (only used when Business Intent Topics is populated)',
+				description: 'Minimum intent level filter',
 				displayOptions: {
 					show: {
 						type: ['businesses'],
@@ -1043,7 +1043,7 @@ export const operations = {
 				name: 'include_related_job_titles',
 				type: 'boolean',
 				default: false,
-				description: 'When enabled, includes prospects with job titles similar to the specified job_title filter (only used when Job Titles is populated)',
+				description: 'When enabled, includes prospects with job titles similar to the specified job_title filter',
 				displayOptions: {
 					show: {
 						type: ['prospects'],
