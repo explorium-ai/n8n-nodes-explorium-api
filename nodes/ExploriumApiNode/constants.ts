@@ -44,11 +44,6 @@ export const businessEnrichmentOptions = [
 		value: 'website_keywords',
 		description: 'Keyword search on websites',
 	},
-	{
-		name: 'Business Intent Topics',
-		value: 'business_intent_topics',
-		description: 'Intent topic insights indicating topics companies are actively researching',
-	},
 ];
 
 // Prospect enrichment options
@@ -138,7 +133,6 @@ export const enrichmentEndpoints = {
 		linkedin_posts: '/v1/businesses/linkedin_posts/bulk_enrich',
 		website_changes: '/v1/businesses/website_changes/bulk_enrich',
 		website_keywords: '/v1/businesses/company_website_keywords/bulk_enrich',
-		business_intent_topics: '/v1/businesses/business_intent_topics_bombora/bulk_enrich',
 	},
 	prospects: {
 		contacts: '/v1/prospects/contacts_information/bulk_enrich',
