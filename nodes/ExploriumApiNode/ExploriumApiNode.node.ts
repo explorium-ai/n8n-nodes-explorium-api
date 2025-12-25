@@ -326,37 +326,46 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				requestBody = body;
 			}
 
-			const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-				executeFunctions,
-				'exploriumApi',
-				{
-					method: 'POST',
-					url: `https://api.explorium.ai${endpoint}`,
-					body: requestBody,
-					json: true,
-				},
-			);
+			try {
+				const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+					executeFunctions,
+					'exploriumApi',
+					{
+						method: 'POST',
+						url: `https://api.explorium.ai${endpoint}`,
+						body: requestBody,
+						json: true,
+					},
+				);
 
-			enrichment_responses.push({
-				enrichment_type: enrichment,
-				response,
-				hasData: Boolean(response.data && response.data.length > 0),
-			});
-
-			for (const entity of response.data || []) {
-				const matchedEntity = enriched_data.find((x) => {
-					if (type === 'businesses') {
-						return x.business_id === entity.business_id;
-					} else {
-						return x.prospect_id === entity.prospect_id;
-					}
+				enrichment_responses.push({
+					enrichment_type: enrichment,
+					response,
+					hasData: Boolean(response.data && response.data.length > 0),
 				});
 
-				if (matchedEntity) {
-					Object.assign(matchedEntity.data, entity.data);
-				} else {
-					enriched_data.push(entity);
+				for (const entity of response.data || []) {
+					const matchedEntity = enriched_data.find((x) => {
+						if (type === 'businesses') {
+							return x.business_id === entity.business_id;
+						} else {
+							return x.prospect_id === entity.prospect_id;
+						}
+					});
+
+					if (matchedEntity) {
+						Object.assign(matchedEntity.data, entity.data);
+					} else {
+						enriched_data.push(entity);
+					}
 				}
+			} catch (error) {
+				enrichment_responses.push({
+					enrichment_type: enrichment,
+					response: null,
+					hasData: false,
+					error: error.message || `Could not enrich ${type} with ${enrichment} enrichment`,
+				});
 			}
 		}
 
