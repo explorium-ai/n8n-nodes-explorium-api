@@ -364,7 +364,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 					enrichment_type: enrichment,
 					response: null,
 					hasData: false,
-					error: error.message || `Could not enrich businesses with ${enrichment} enrichment`,
+					error: error.message || `Could not enrich ${type} with ${enrichment} enrichment`,
 				});
 			}
 		}
