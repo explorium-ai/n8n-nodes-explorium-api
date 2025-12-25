@@ -494,7 +494,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 						topics: businessIntentTopics,
 					};
 					const topicIntentLevel = executeFunctions.getNodeParameter(
-						'business_intent_topics_topic_intent_level',
+						'business_intent_topics_level',
 						i,
 						'',
 					) as string;

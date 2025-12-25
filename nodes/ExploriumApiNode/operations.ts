@@ -898,7 +898,7 @@ export const operations = {
 			},
 			{
 				displayName: 'Topic Intent Level',
-				name: 'business_intent_topics_topic_intent_level',
+				name: 'business_intent_topics_level',
 				type: 'options',
 				options: [
 					{ name: 'Emerging Intent', value: 'emerging_intent' },
