@@ -890,7 +890,7 @@ export const operations = {
 								type: 'string',
 								default: '',
 								placeholder: 'e.g. crm: crm management',
-								description: 'Intent topic in format "Category: Topic"',
+								description: 'Intent topic in format "category: topic"',
 							},
 						],
 					},
