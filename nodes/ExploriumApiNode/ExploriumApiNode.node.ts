@@ -387,6 +387,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 	for (let i = 0; i < length; i++) {
 		const type = executeFunctions.getNodeParameter('type', i) as string;
 		const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', i, false) as boolean;
+		const extractData = executeFunctions.getNodeParameter('extractData', i, false) as boolean;
 
 		let requestBody: any;
 
@@ -562,9 +563,9 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			let additionalFilters: any = {};
 			try {
 				additionalFilters =
-					typeof additionalFiltersString === 'string'
-						? JSON.parse(additionalFiltersString)
-						: additionalFiltersString;
+				typeof additionalFiltersString === 'string'
+				? JSON.parse(additionalFiltersString)
+				: additionalFiltersString;
 			} catch {
 				throw new NodeOperationError(
 					executeFunctions.getNode(),
@@ -605,7 +606,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			},
 		);
 
-		returnData.push({ json: response });
+		handleResponseData(returnData, response, extractData, response.data);
 	}
 	return [returnData];
 }
@@ -616,6 +617,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 	for (let i = 0; i < length; i++) {
 		const type = executeFunctions.getNodeParameter('type', i) as 'businesses' | 'prospects';
 		const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', i, false) as boolean;
+		const extractData = executeFunctions.getNodeParameter('extractData', i, false) as boolean;
 
 		const body: any = {};
 
@@ -687,7 +689,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 			},
 		);
 
-		returnData.push({ json: response });
+		handleResponseData(returnData, response, extractData, response.output_events);
 	}
 
 	return [returnData];
@@ -763,6 +765,21 @@ async function executeAutocomplete(
 	}
 
 	return [returnData];
+}
+
+function handleResponseData(
+	returnData: INodeExecutionData[],
+	response: any,
+	extractData: boolean,
+	responseData?: any[],
+) {
+	if (extractData && responseData && Array.isArray(responseData)) {
+		for (const item of responseData) {
+			returnData.push({ json: item });
+		}
+	} else {
+		returnData.push({ json: response });
+	}
 }
 
 function extractJsonInput<T = any>(executeFunctions: IExecuteFunctions, index: number): T {
