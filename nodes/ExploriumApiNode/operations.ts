@@ -910,7 +910,7 @@ export const operations = {
 				displayOptions: {
 					show: {
 						type: ['businesses'],
-						useJsonInput: [false]
+						useJsonInput: [false],
 					},
 				},
 			},
@@ -1047,7 +1047,7 @@ export const operations = {
 				displayOptions: {
 					show: {
 						type: ['prospects'],
-						useJsonInput: [false]
+						useJsonInput: [false],
 					},
 				},
 			},
