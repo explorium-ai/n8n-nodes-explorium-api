@@ -236,15 +236,15 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 		const enrichments = executeFunctions.getNodeParameter('enrichment', i) as string[];
 		const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', i, false) as boolean;
 
-		let keywordsBody: { parameters?: { keywords: string[] } } | undefined;
-		let body: (BusinessIds_Body & { parameters?: { keywords: string[] } }) | ProspectIds_Body;
+		let body: BusinessIds_Body | ProspectIds_Body;
+		let jsonInputParameters: any = undefined;
 
 		if (useJsonInput) {
 			const jsonInput = extractJsonInput(executeFunctions, i);
-			if (enrichments.includes('website_keywords')) {
-				const { parameters, ..._body } = jsonInput;
-				keywordsBody = { parameters };
-				body = _body;
+			if (enrichments.some((e) => ['website_keywords', 'website_traffic', 'business_intent_topics'].includes(e))) {
+				const { parameters, ...bodyWithoutParams } = jsonInput;
+				jsonInputParameters = parameters;
+				body = bodyWithoutParams;
 			} else {
 				body = jsonInput;
 			}
@@ -257,17 +257,6 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				body = {
 					business_ids: collection.business_ids?.map((x) => x.id) || [],
 				};
-
-				if (enrichments.includes('website_keywords')) {
-					const keywordsCollection = executeFunctions.getNodeParameter('keywords', i, {
-						keywords: [],
-					}) as { keywords: Array<{ keyword: string }> };
-
-					const keywords =
-						keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];
-
-					keywordsBody = { parameters: { keywords } };
-				}
 			} else {
 				const collection = executeFunctions.getNodeParameter('prospect_ids', i, {
 					prospect_ids: [],
@@ -284,16 +273,6 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				throw new NodeOperationError(
 					executeFunctions.getNode(),
 					'At least one business ID is required',
-				);
-			}
-
-			if (
-				enrichments.includes('website_keywords') &&
-				keywordsBody!.parameters!.keywords.length === 0
-			) {
-				throw new NodeOperationError(
-					executeFunctions.getNode(),
-					'At least one website keyword is required',
 				);
 			}
 		}
@@ -319,13 +298,81 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				);
 			}
 
-			let requestBody: any;
-			if (type === 'businesses' && enrichment === 'website_keywords') {
-				requestBody = { ...body, ...keywordsBody };
-			} else {
-				requestBody = body;
+			let requestBody: any = { ...body };
+
+			// Build parameters specific to this enrichment
+			if (useJsonInput && jsonInputParameters) {
+				// Use parameters from JSON input
+				requestBody.parameters = jsonInputParameters;
+			} else if (!useJsonInput && type === 'businesses') {
+				const parameters: any = {};
+
+				switch (enrichment) {
+					case 'website_keywords': {
+						const keywordsCollection = executeFunctions.getNodeParameter('keywords', i, {
+							keywords: [],
+						}) as { keywords: Array<{ keyword: string }> };
+
+						const keywords =
+							keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];
+
+						if (keywords.length === 0) {
+							throw new NodeOperationError(
+								executeFunctions.getNode(),
+								'At least one website keyword is required',
+							);
+						}
+
+						parameters.keywords = keywords;
+						break;
+					}
+
+					case 'website_traffic': {
+						const monthPeriod = executeFunctions.getNodeParameter('month_period', i, '') as string;
+						if (monthPeriod) {
+							// Validate YYYY-MM format
+							const monthPeriodRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
+							if (!monthPeriodRegex.test(monthPeriod)) {
+								throw new NodeOperationError(
+									executeFunctions.getNode(),
+									`Invalid month period parameter format: "${monthPeriod}". Must be in YYYY-MM format (e.g., 2025-08)`,
+								);
+							}
+							parameters.month_period = monthPeriod;
+						}
+						break;
+					}
+
+					case 'business_intent_topics': {
+						const topicsCollection = executeFunctions.getNodeParameter('intent_topics', i, {
+							intent_topics: [],
+						}) as { intent_topics: Array<{ topic: string }> };
+
+						const topics =
+							topicsCollection.intent_topics?.map((item) => item.topic).filter(Boolean) || [];
+
+						const minScore = executeFunctions.getNodeParameter('min_score', i) as number | undefined;
+
+						if (topics.length > 0) {
+							parameters.topics = topics;
+						}
+						if (minScore !== undefined && minScore > 60) {
+							parameters.min_score = minScore;
+						}
+						break;
+					}
+				}
+
+				// Add parameters to request body if any were set
+				if (Object.keys(parameters).length > 0) {
+					requestBody.parameters = parameters;
+				}
 			}
 
+			// @ts-ignore
+			console.log(`enrichment: ${enrichment}`);
+			// @ts-ignore
+			console.log(`requestBody: ${JSON.stringify(requestBody, null, 2)}`);
 			const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
 				executeFunctions,
 				'exploriumApi',
