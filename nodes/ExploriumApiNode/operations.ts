@@ -332,6 +332,60 @@ export const operations = {
 					},
 				],
 			},
+			{
+				displayName: 'Month Period',
+				name: 'month_period',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. 2025-08',
+				description: 'Month period for traffic data (YYYY-MM format, e.g. 2025-08), since January 2017. Optional - defaults to previous month.',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['website_traffic'], useJsonInput: [false] },
+				},
+			},
+			{
+				displayName: 'Intent Topics',
+				name: 'intent_topics',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Intent topics to filter (optional - omit to get all topics)',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['business_intent_topics'], useJsonInput: [false] },
+				},
+				options: [
+					{
+						name: 'intent_topics',
+						displayName: 'Topics',
+						values: [
+							{
+								displayName: 'Topic',
+								name: 'topic',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. training & development: corporate universities',
+								description: 'Intent topic in format "category: topic"',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Minimum Score',
+				name: 'min_score',
+				type: 'number',
+				default: '',
+				typeOptions: {
+					minValue: 60,
+					maxValue: 100,
+				},
+				description: 'Minimum intent score threshold. Optional - if set, must be between 60 and 100, otherwise 60 (default value) will be applied',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['business_intent_topics'], useJsonInput: [false] },
+				},
+			},
 		],
 		jsonExamples: [
 			{
@@ -364,6 +418,50 @@ export const operations = {
 					show: {
 						type: ['businesses'],
 						enrichment: ['website_keywords'],
+					},
+				},
+			},
+			{
+				description: 'Enrich businesses with website traffic data for a specific month',
+				default: JSON.stringify(
+					{
+						business_ids: ['340c8040bd50cbab9c7df718bbe51cc9', 'b197ffdef2ddc3308584dce7afa3661b'],
+						parameters: {
+							month_period: '2025-08',
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						enrichment: ['website_traffic'],
+					},
+				},
+			},
+			{
+				description: 'Enrich businesses with intent topic insights (Bombora)',
+				default: JSON.stringify(
+					{
+						business_ids: ['8adce3ca1cef0c986b22310e369a0793'],
+						parameters: {
+							topics: [
+								'training & development: corporate universities',
+								'training & development: career management',
+								'training & development: group coaching',
+								'training & development: team building',
+							],
+							min_score: 65,
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						enrichment: ['business_intent_topics'],
 					},
 				},
 			},
