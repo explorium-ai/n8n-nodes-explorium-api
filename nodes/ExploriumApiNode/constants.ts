@@ -57,7 +57,7 @@ export const businessEnrichmentOptions = [
 	{
 		name: 'Company Hierarchy',
 		value: 'company_hierarchy',
-		description: 'structured view of a company’s corporate hierarchy, including parent company, ultimate parent, and subsidiaries',
+		description: 'Structured view of a company’s corporate hierarchy, including parent company, ultimate parent, and subsidiaries',
 	},
 	{
 		name: 'Website Traffic',
