@@ -313,31 +313,13 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 							keywords: [],
 						}) as { keywords: Array<{ keyword: string }> };
 
-						const keywords =
-							keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];
-
-						if (keywords.length === 0) {
-							throw new NodeOperationError(
-								executeFunctions.getNode(),
-								'At least one website keyword is required',
-							);
-						}
-
-						parameters.keywords = keywords;
+						parameters.keywords = keywordsCollection.keywords?.map((item) => item.keyword).filter(Boolean) || [];;
 						break;
 					}
 
 					case 'website_traffic': {
 						const monthPeriod = executeFunctions.getNodeParameter('month_period', i, '') as string;
 						if (monthPeriod) {
-							// Validate YYYY-MM format
-							const monthPeriodRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-							if (!monthPeriodRegex.test(monthPeriod)) {
-								throw new NodeOperationError(
-									executeFunctions.getNode(),
-									`Invalid month period parameter format: "${monthPeriod}". Must be in YYYY-MM format (e.g., 2025-08)`,
-								);
-							}
 							parameters.month_period = monthPeriod;
 						}
 						break;
@@ -369,10 +351,6 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				}
 			}
 
-			// @ts-ignore
-			console.log(`enrichment: ${enrichment}`);
-			// @ts-ignore
-			console.log(`requestBody: ${JSON.stringify(requestBody, null, 2)}`);
 			const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
 				executeFunctions,
 				'exploriumApi',
@@ -384,9 +362,12 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				},
 			);
 
+			// Clone the response to prevent mutation of historical data
+			const clonedResponse = JSON.parse(JSON.stringify(response));
+			
 			enrichment_responses.push({
 				enrichment_type: enrichment,
-				response,
+				response: clonedResponse,
 				hasData: Boolean(response.data && response.data.length > 0),
 			});
 
