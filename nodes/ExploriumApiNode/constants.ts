@@ -44,6 +44,31 @@ export const businessEnrichmentOptions = [
 		value: 'website_keywords',
 		description: 'Keyword search on websites',
 	},
+	{
+		name: 'Lookalike Companies',
+		value: 'lookalike_companies',
+		description: 'Similar companies (Ocean.IO)',
+	},
+	{
+		name: 'Company Webstack',
+		value: 'company_webstack',
+		description: 'Company website technology stack (BuiltWith)',
+	},
+	{
+		name: 'Company Hierarchy',
+		value: 'company_hierarchy',
+		description: 'structured view of a company’s corporate hierarchy, including parent company, ultimate parent, and subsidiaries',
+	},
+	{
+		name: 'Website Traffic',
+		value: 'website_traffic',
+		description: 'Monthly web traffic metrics (SEMrush)',
+	},
+	{
+		name: 'Business Intent Topics',
+		value: 'business_intent_topics',
+		description: 'Company intent topic insights (Bombora)',
+	},
 ];
 
 // Prospect enrichment options
@@ -115,6 +140,7 @@ export const autocompleteFields = [
 	{ name: 'Job Level', value: 'job_level' },
 	{ name: 'City Region Country', value: 'city_region_country' },
 	{ name: 'Company Name', value: 'company_name' },
+	{ name: 'Business Intent Topics', value: 'business_intent_topics' },
 ];
 
 // Mapping enrichment types to endpoints
@@ -132,6 +158,11 @@ export const enrichmentEndpoints = {
 		linkedin_posts: '/v1/businesses/linkedin_posts/bulk_enrich',
 		website_changes: '/v1/businesses/website_changes/bulk_enrich',
 		website_keywords: '/v1/businesses/company_website_keywords/bulk_enrich',
+		lookalike_companies: '/v1/businesses/lookalikes/bulk_enrich',
+		company_webstack: '/v1/businesses/webstack/bulk_enrich',
+		company_hierarchy: '/v1/businesses/company_hierarchies/bulk_enrich',
+		website_traffic: '/v1/businesses/website_traffic/bulk_enrich',
+		business_intent_topics: '/v1/businesses/bombora_intent/bulk_enrich',
 	},
 	prospects: {
 		contacts: '/v1/prospects/contacts_information/bulk_enrich',

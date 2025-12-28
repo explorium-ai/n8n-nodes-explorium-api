@@ -332,6 +332,60 @@ export const operations = {
 					},
 				],
 			},
+			{
+				displayName: 'Month Period',
+				name: 'month_period',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. 2025-08',
+				description: 'Month period for traffic data (YYYY-MM format, e.g. 2025-08), since January 2017. Optional - defaults to previous month.',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['website_traffic'], useJsonInput: [false] },
+				},
+			},
+			{
+				displayName: 'Intent Topics',
+				name: 'intent_topics',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Intent topics to filter (optional - omit to get all topics)',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['business_intent_topics'], useJsonInput: [false] },
+				},
+				options: [
+					{
+						name: 'intent_topics',
+						displayName: 'Topics',
+						values: [
+							{
+								displayName: 'Topic',
+								name: 'topic',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. training & development: corporate universities',
+								description: 'Intent topic in format "category: topic"',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Minimum Score',
+				name: 'min_score',
+				type: 'number',
+				default: '',
+				typeOptions: {
+					minValue: 60,
+					maxValue: 100,
+				},
+				description: 'Minimum intent score threshold. Optional - if set, must be between 60 and 100, otherwise 60 (default value) will be applied',
+				displayOptions: {
+					show: { type: ['businesses'], enrichment: ['business_intent_topics'], useJsonInput: [false] },
+				},
+			},
 		],
 		jsonExamples: [
 			{
@@ -364,6 +418,50 @@ export const operations = {
 					show: {
 						type: ['businesses'],
 						enrichment: ['website_keywords'],
+					},
+				},
+			},
+			{
+				description: 'Enrich businesses with website traffic data for a specific month',
+				default: JSON.stringify(
+					{
+						business_ids: ['340c8040bd50cbab9c7df718bbe51cc9', 'b197ffdef2ddc3308584dce7afa3661b'],
+						parameters: {
+							month_period: '2025-08',
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						enrichment: ['website_traffic'],
+					},
+				},
+			},
+			{
+				description: 'Enrich businesses with intent topic insights (Bombora)',
+				default: JSON.stringify(
+					{
+						business_ids: ['8adce3ca1cef0c986b22310e369a0793'],
+						parameters: {
+							topics: [
+								'training & development: corporate universities',
+								'training & development: career management',
+								'training & development: group coaching',
+								'training & development: team building',
+							],
+							min_score: 65,
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						enrichment: ['business_intent_topics'],
 					},
 				},
 			},
@@ -411,6 +509,13 @@ export const operations = {
 				default: 'businesses',
 				required: true,
 				description: 'Type of entities to fetch',
+			},
+			{
+				displayName: 'Extract Data',
+				name: 'extractData',
+				type: 'boolean',
+				default: false,
+				description: 'Set to false to return the whole response, or true to return only the data field contents as separate items',
 			},
 			{
 				displayName: 'Mode',
@@ -869,6 +974,51 @@ export const operations = {
 					},
 				],
 			},
+			{
+				displayName: 'Business Intent Topics',
+				name: 'business_intent_topics',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter companies by intent topics (e.g. "crm: crm management", "sales: sales automation"). Multiple topics can be provided.',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'business_intent_topics',
+						displayName: 'Intent Topics',
+						values: [
+							{
+								displayName: 'Topic',
+								name: 'topic',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. crm: crm management',
+								description: 'Intent topic in format "category: topic"',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Topic Intent Level',
+				name: 'business_intent_topics_level',
+				type: 'options',
+				options: [
+					{ name: 'Emerging Intent', value: 'emerging_intent' },
+					{ name: 'High Intent', value: 'high_intent' },
+					{ name: 'Very High Intent', value: 'very_high_intent' },
+				],
+				default: 'emerging_intent',
+				description: 'Minimum intent level filter',
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						useJsonInput: [false],
+					},
+				},
+			},
 			// Prospect-specific filters
 			{
 				displayName: 'Business IDs',
@@ -950,14 +1100,35 @@ export const operations = {
 								name: 'department',
 								type: 'options',
 								options: [
-									{ name: 'Business Development', value: 'business development' },
-									{ name: 'Engineering', value: 'engineering' },
-									{ name: 'Finance', value: 'finance' },
+									{ name: 'Administration', value: 'administration' },
+									{ name: 'Real Estate', value: 'real estate' },
+									{ name: 'Healthcare', value: 'healthcare' },
+									{ name: 'Partnerships', value: 'partnerships' },
+									{ name: 'C-Suite', value: 'c-suite' },
+									{ name: 'Design', value: 'design' },
 									{ name: 'Human Resources', value: 'human resources' },
-									{ name: 'Legal', value: 'legal' },
-									{ name: 'Marketing', value: 'marketing' },
-									{ name: 'Operations', value: 'operations' },
+									{ name: 'Engineering', value: 'engineering' },
+									{ name: 'Education', value: 'education' },
+									{ name: 'Strategy', value: 'strategy' },
+									{ name: 'Product', value: 'product' },
 									{ name: 'Sales', value: 'sales' },
+									{ name: 'R&D', value: 'r&d' },
+									{ name: 'Retail', value: 'retail' },
+									{ name: 'Customer Success', value: 'customer success' },
+									{ name: 'Security', value: 'security' },
+									{ name: 'Public Service', value: 'public service' },
+									{ name: 'Creative', value: 'creative' },
+									{ name: 'IT', value: 'it' },
+									{ name: 'Support', value: 'support' },
+									{ name: 'Marketing', value: 'marketing' },
+									{ name: 'Trade', value: 'trade' },
+									{ name: 'Legal', value: 'legal' },
+									{ name: 'Operations', value: 'operations' },
+									{ name: 'Procurement', value: 'procurement' },
+									{ name: 'Data', value: 'data' },
+									{ name: 'Manufacturing', value: 'manufacturing' },
+									{ name: 'Logistics', value: 'logistics' },
+									{ name: 'Finance', value: 'finance' },
 								],
 								default: 'sales',
 								description: 'Job department',
@@ -965,6 +1136,46 @@ export const operations = {
 						],
 					},
 				],
+			},
+			{
+				displayName: 'Job Titles',
+				name: 'job_title',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by job titles',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'job_title',
+						displayName: 'Job Titles',
+						values: [
+							{
+								displayName: 'Job Title',
+								name: 'title',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Software Engineer',
+								description: 'Job title to filter by',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Include Related Job Titles',
+				name: 'include_related_job_titles',
+				type: 'boolean',
+				default: false,
+				description: 'When enabled, includes prospects with job titles similar to the specified job_title filter',
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+						useJsonInput: [false],
+					},
+				},
 			},
 			{
 				displayName: 'Has Email',
@@ -1147,6 +1358,50 @@ export const operations = {
 					show: {},
 				},
 			},
+			{
+				description: 'Fetch businesses with business intent topics filter',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						size: 50,
+						page_size: 50,
+						page: 1,
+						filters: {
+							business_intent_topics: {
+								topics: ['crm: crm management', 'sales: sales automation'],
+								topic_intent_level: 'emerging_intent',
+							},
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: { type: ['businesses'] },
+				},
+			},
+			{
+				description: 'Fetch prospects with job title filter and include related titles',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						size: 50,
+						page_size: 50,
+						page: 1,
+						filters: {
+							job_title: {
+								values: ['Software Engineer'],
+								include_related_job_titles: true,
+							},
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: { type: ['prospects'] },
+				},
+			},
 		],
 	},
 	events: {
@@ -1176,6 +1431,13 @@ export const operations = {
 				default: 'businesses',
 				required: true,
 				description: 'Type of events to fetch',
+			},
+			{
+				displayName: 'Extract Data',
+				name: 'extractData',
+				type: 'boolean',
+				default: false,
+				description: 'Set to false to return the whole response, or true to return only the data field contents as separate items',
 			},
 			{
 				displayName: 'Business IDs',
@@ -1377,6 +1639,7 @@ export const operations = {
 							{ field: 'company_age', query: '6' },
 							{ field: 'number_of_locations', query: '2' },
 							{ field: 'company_name', query: 'microsoft' },
+							{ field: 'business_intent_topics', query: 'CRM' },
 						],
 					},
 					null,
