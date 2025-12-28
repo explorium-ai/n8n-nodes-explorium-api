@@ -20,6 +20,8 @@ import {
 } from './types';
 import { excludeEmptyValues } from './utils';
 
+declare const structuredClone: <T>(value: T) => T;
+
 export class ExploriumApiNode implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Explorium API',
@@ -364,7 +366,7 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				);
 
 				// Clone the response to prevent mutation of historical data
-				const clonedResponse = JSON.parse(JSON.stringify(response));
+				const clonedResponse = structuredClone(response);
 
 				enrichment_responses.push({
 					enrichment_type: enrichment,
