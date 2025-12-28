@@ -351,40 +351,49 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				}
 			}
 
-			const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-				executeFunctions,
-				'exploriumApi',
-				{
-					method: 'POST',
-					url: `https://api.explorium.ai${endpoint}`,
-					body: requestBody,
-					json: true,
-				},
-			);
+			try {
+				const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
+					executeFunctions,
+					'exploriumApi',
+					{
+						method: 'POST',
+						url: `https://api.explorium.ai${endpoint}`,
+						body: requestBody,
+						json: true,
+					},
+				);
 
-			// Clone the response to prevent mutation of historical data
-			const clonedResponse = JSON.parse(JSON.stringify(response));
-			
-			enrichment_responses.push({
-				enrichment_type: enrichment,
-				response: clonedResponse,
-				hasData: Boolean(response.data && response.data.length > 0),
-			});
+				// Clone the response to prevent mutation of historical data
+				const clonedResponse = JSON.parse(JSON.stringify(response));
 
-			for (const entity of response.data || []) {
-				const matchedEntity = enriched_data.find((x) => {
-					if (type === 'businesses') {
-						return x.business_id === entity.business_id;
-					} else {
-						return x.prospect_id === entity.prospect_id;
-					}
+				enrichment_responses.push({
+					enrichment_type: enrichment,
+					response: clonedResponse,
+					hasData: Boolean(response.data && response.data.length > 0),
 				});
 
-				if (matchedEntity) {
-					Object.assign(matchedEntity.data, entity.data);
-				} else {
-					enriched_data.push(entity);
+				for (const entity of response.data || []) {
+					const matchedEntity = enriched_data.find((x) => {
+						if (type === 'businesses') {
+							return x.business_id === entity.business_id;
+						} else {
+							return x.prospect_id === entity.prospect_id;
+						}
+					});
+
+					if (matchedEntity) {
+						Object.assign(matchedEntity.data, entity.data);
+					} else {
+						enriched_data.push(entity);
+					}
 				}
+			} catch (error) {
+				enrichment_responses.push({
+					enrichment_type: enrichment,
+					response: null,
+					hasData: false,
+					error: error.message || `Could not enrich ${type} with ${enrichment} enrichment`,
+				});
 			}
 		}
 
@@ -406,6 +415,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 	for (let i = 0; i < length; i++) {
 		const type = executeFunctions.getNodeParameter('type', i) as string;
 		const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', i, false) as boolean;
+		const extractData = executeFunctions.getNodeParameter('extractData', i, false) as boolean;
 
 		let requestBody: any;
 
@@ -514,6 +524,23 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 				if (websiteKeywords.length > 0) {
 					filters.website_keywords = { values: websiteKeywords };
 				}
+
+				// Business intent topics
+				const businessIntentTopics = getCollectionValues('business_intent_topics', 'topic');
+				if (businessIntentTopics.length > 0) {
+					const businessIntentTopicsFilter: any = {
+						topics: businessIntentTopics,
+					};
+					const topicIntentLevel = executeFunctions.getNodeParameter(
+						'business_intent_topics_level',
+						i,
+						'',
+					) as string;
+					if (topicIntentLevel) {
+						businessIntentTopicsFilter.topic_intent_level = topicIntentLevel;
+					}
+					filters.business_intent_topics = businessIntentTopicsFilter;
+				}
 			}
 
 			if (type === 'prospects') {
@@ -533,6 +560,23 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 				const jobDepartments = getCollectionValues('job_department', 'department');
 				if (jobDepartments.length > 0) {
 					filters.job_department = { values: jobDepartments };
+				}
+
+				// Job titles
+				const jobTitles = getCollectionValues('job_title', 'title');
+				if (jobTitles.length > 0) {
+					const jobTitleFilter: any = {
+						values: jobTitles,
+					};
+					const includeRelated = executeFunctions.getNodeParameter(
+						'include_related_job_titles',
+						i,
+						false,
+					) as boolean;
+					if (includeRelated) {
+						jobTitleFilter.include_related_job_titles = includeRelated;
+					}
+					filters.job_title = jobTitleFilter;
 				}
 
 				// Has email - boolean field
@@ -581,9 +625,9 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			let additionalFilters: any = {};
 			try {
 				additionalFilters =
-					typeof additionalFiltersString === 'string'
-						? JSON.parse(additionalFiltersString)
-						: additionalFiltersString;
+				typeof additionalFiltersString === 'string'
+				? JSON.parse(additionalFiltersString)
+				: additionalFiltersString;
 			} catch {
 				throw new NodeOperationError(
 					executeFunctions.getNode(),
@@ -624,7 +668,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			},
 		);
 
-		returnData.push({ json: response });
+		handleResponseData(returnData, response, extractData, response.data);
 	}
 	return [returnData];
 }
@@ -635,6 +679,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 	for (let i = 0; i < length; i++) {
 		const type = executeFunctions.getNodeParameter('type', i) as 'businesses' | 'prospects';
 		const useJsonInput = executeFunctions.getNodeParameter('useJsonInput', i, false) as boolean;
+		const extractData = executeFunctions.getNodeParameter('extractData', i, false) as boolean;
 
 		const body: any = {};
 
@@ -706,7 +751,7 @@ async function executeEvents(executeFunctions: IExecuteFunctions): Promise<INode
 			},
 		);
 
-		returnData.push({ json: response });
+		handleResponseData(returnData, response, extractData, response.output_events);
 	}
 
 	return [returnData];
@@ -782,6 +827,21 @@ async function executeAutocomplete(
 	}
 
 	return [returnData];
+}
+
+function handleResponseData(
+	returnData: INodeExecutionData[],
+	response: any,
+	extractData: boolean,
+	responseData?: any[],
+) {
+	if (extractData && responseData && Array.isArray(responseData)) {
+		for (const item of responseData) {
+			returnData.push({ json: item });
+		}
+	} else {
+		returnData.push({ json: response });
+	}
 }
 
 function extractJsonInput<T = any>(executeFunctions: IExecuteFunctions, index: number): T {

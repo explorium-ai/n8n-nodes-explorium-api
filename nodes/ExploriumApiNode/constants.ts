@@ -140,6 +140,7 @@ export const autocompleteFields = [
 	{ name: 'Job Level', value: 'job_level' },
 	{ name: 'City Region Country', value: 'city_region_country' },
 	{ name: 'Company Name', value: 'company_name' },
+	{ name: 'Business Intent Topics', value: 'business_intent_topics' },
 ];
 
 // Mapping enrichment types to endpoints

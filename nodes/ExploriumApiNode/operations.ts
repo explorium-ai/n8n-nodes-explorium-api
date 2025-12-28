@@ -511,6 +511,13 @@ export const operations = {
 				description: 'Type of entities to fetch',
 			},
 			{
+				displayName: 'Extract Data',
+				name: 'extractData',
+				type: 'boolean',
+				default: false,
+				description: 'Set to false to return the whole response, or true to return only the data field contents as separate items',
+			},
+			{
 				displayName: 'Mode',
 				name: 'mode',
 				type: 'options',
@@ -967,6 +974,51 @@ export const operations = {
 					},
 				],
 			},
+			{
+				displayName: 'Business Intent Topics',
+				name: 'business_intent_topics',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter companies by intent topics (e.g. "crm: crm management", "sales: sales automation"). Multiple topics can be provided.',
+				displayOptions: { show: { type: ['businesses'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'business_intent_topics',
+						displayName: 'Intent Topics',
+						values: [
+							{
+								displayName: 'Topic',
+								name: 'topic',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. crm: crm management',
+								description: 'Intent topic in format "category: topic"',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Topic Intent Level',
+				name: 'business_intent_topics_level',
+				type: 'options',
+				options: [
+					{ name: 'Emerging Intent', value: 'emerging_intent' },
+					{ name: 'High Intent', value: 'high_intent' },
+					{ name: 'Very High Intent', value: 'very_high_intent' },
+				],
+				default: 'emerging_intent',
+				description: 'Minimum intent level filter',
+				displayOptions: {
+					show: {
+						type: ['businesses'],
+						useJsonInput: [false],
+					},
+				},
+			},
 			// Prospect-specific filters
 			{
 				displayName: 'Business IDs',
@@ -1063,6 +1115,46 @@ export const operations = {
 						],
 					},
 				],
+			},
+			{
+				displayName: 'Job Titles',
+				name: 'job_title',
+				type: 'fixedCollection',
+				default: {},
+				typeOptions: {
+					multipleValues: true,
+				},
+				description: 'Filter by job titles',
+				displayOptions: { show: { type: ['prospects'], useJsonInput: [false] } },
+				options: [
+					{
+						name: 'job_title',
+						displayName: 'Job Titles',
+						values: [
+							{
+								displayName: 'Job Title',
+								name: 'title',
+								type: 'string',
+								default: '',
+								placeholder: 'e.g. Software Engineer',
+								description: 'Job title to filter by',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Include Related Job Titles',
+				name: 'include_related_job_titles',
+				type: 'boolean',
+				default: false,
+				description: 'When enabled, includes prospects with job titles similar to the specified job_title filter',
+				displayOptions: {
+					show: {
+						type: ['prospects'],
+						useJsonInput: [false],
+					},
+				},
 			},
 			{
 				displayName: 'Has Email',
@@ -1245,6 +1337,50 @@ export const operations = {
 					show: {},
 				},
 			},
+			{
+				description: 'Fetch businesses with business intent topics filter',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						size: 50,
+						page_size: 50,
+						page: 1,
+						filters: {
+							business_intent_topics: {
+								topics: ['crm: crm management', 'sales: sales automation'],
+								topic_intent_level: 'emerging_intent',
+							},
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: { type: ['businesses'] },
+				},
+			},
+			{
+				description: 'Fetch prospects with job title filter and include related titles',
+				default: JSON.stringify(
+					{
+						mode: 'preview',
+						size: 50,
+						page_size: 50,
+						page: 1,
+						filters: {
+							job_title: {
+								values: ['Software Engineer'],
+								include_related_job_titles: true,
+							},
+						},
+					},
+					null,
+					2,
+				),
+				displayOptions: {
+					show: { type: ['prospects'] },
+				},
+			},
 		],
 	},
 	events: {
@@ -1274,6 +1410,13 @@ export const operations = {
 				default: 'businesses',
 				required: true,
 				description: 'Type of events to fetch',
+			},
+			{
+				displayName: 'Extract Data',
+				name: 'extractData',
+				type: 'boolean',
+				default: false,
+				description: 'Set to false to return the whole response, or true to return only the data field contents as separate items',
 			},
 			{
 				displayName: 'Business IDs',
@@ -1475,6 +1618,7 @@ export const operations = {
 							{ field: 'company_age', query: '6' },
 							{ field: 'number_of_locations', query: '2' },
 							{ field: 'company_name', query: 'microsoft' },
+							{ field: 'business_intent_topics', query: 'CRM' },
 						],
 					},
 					null,
