@@ -1,6 +1,6 @@
 {
 	"name": "@exploriumai/n8n-nodes-explorium-ai",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "N8N nodes for the Explorium Agentsource API",
 	"keywords": [
 		"n8n-community-node-package"
