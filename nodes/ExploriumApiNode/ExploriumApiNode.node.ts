@@ -429,8 +429,14 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			// Get pagination and mode parameters
 			const mode = executeFunctions.getNodeParameter('mode', i, 'preview') as string;
 			const size = executeFunctions.getNodeParameter('size', i, 20) as number;
-			const pageSize = executeFunctions.getNodeParameter('page_size', i, 100) as number;
-			const page = executeFunctions.getNodeParameter('page', i, 1) as number;
+			const autoPaginate = executeFunctions.getNodeParameter('auto_paginate', i, false) as boolean;
+			let pageSize = executeFunctions.getNodeParameter('page_size', i, 100) as number;
+			let page = executeFunctions.getNodeParameter('page', i, 1) as number;
+
+			if (autoPaginate) {
+				pageSize = Math.min(100, size);
+				page = 1;
+			}
 
 			// Build filters object from individual parameters
 			const filters: any = {};
