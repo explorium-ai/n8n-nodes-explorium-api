@@ -375,19 +375,31 @@ async function executeEnrich(executeFunctions: IExecuteFunctions): Promise<INode
 				});
 
 				for (const entity of response.data || []) {
-					const matchedEntity = enriched_data.find((x) => {
+					const id = type === 'businesses' ? entity.business_id : entity.prospect_id;
+
+					// Ensure we have a single enriched entry per entity id
+					let enrichedEntry = enriched_data.find((x) => {
 						if (type === 'businesses') {
-							return x.business_id === entity.business_id;
+							return x.business_id === id;
 						} else {
-							return x.prospect_id === entity.prospect_id;
+							return x.prospect_id === id;
 						}
 					});
 
-					if (matchedEntity) {
-						Object.assign(matchedEntity.data, entity.data);
-					} else {
-						enriched_data.push(entity);
+					if (!enrichedEntry) {
+						enrichedEntry = {
+							...(type === 'businesses' ? { business_id: id } : { prospect_id: id }),
+							data: {},
+						};
+						enriched_data.push(enrichedEntry);
 					}
+
+					// Collect all items for this enrichment as an array (even if single)
+					if (!Array.isArray(enrichedEntry.data[enrichment])) {
+						enrichedEntry.data[enrichment] = [];
+					}
+
+					enrichedEntry.data[enrichment].push(entity.data);
 				}
 			} catch (error) {
 				enrichment_responses.push({
