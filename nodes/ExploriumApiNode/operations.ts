@@ -543,13 +543,21 @@ export const operations = {
 				displayOptions: { show: { useJsonInput: [false] } },
 			},
 			{
+				displayName: 'Auto Pagination',
+				name: 'auto_paginate',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to automatically fetch all pages until reaching the requested size',
+				displayOptions: { show: { useJsonInput: [false] } },
+			},
+			{
 				displayName: 'Page Size',
 				name: 'page_size',
 				type: 'number',
 				default: 50,
 				description: 'Number of records per page (max 100)',
 				typeOptions: { minValue: 1, maxValue: 100 },
-				displayOptions: { show: { useJsonInput: [false] } },
+				displayOptions: { show: { useJsonInput: [false], auto_paginate: [false] } },
 			},
 			{
 				displayName: 'Page',
@@ -558,7 +566,7 @@ export const operations = {
 				default: 1,
 				description: 'Page number to retrieve (1-based index)',
 				typeOptions: { minValue: 1 },
-				displayOptions: { show: { useJsonInput: [false] } },
+				displayOptions: { show: { useJsonInput: [false], auto_paginate: [false] } },
 			},
 			{
 				displayName: 'Country Codes',
