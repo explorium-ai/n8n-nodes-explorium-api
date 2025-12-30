@@ -515,7 +515,7 @@ export const operations = {
 				name: 'extractData',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to return only the data field contents as response without execution metadata fields (set toggle to true)',
+				description: 'to return only the data field contents as response without execution metadata fields (set toggle to true)',
 			},
 			{
 				displayName: 'Mode',
