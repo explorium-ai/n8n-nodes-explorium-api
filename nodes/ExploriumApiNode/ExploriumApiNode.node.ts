@@ -433,7 +433,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			size = executeFunctions.getNodeParameter('size', i, 20) as number;
 			autoPaginate = executeFunctions.getNodeParameter('auto_paginate', i, false) as boolean;
 			const page = autoPaginate ? undefined : executeFunctions.getNodeParameter('page', i, 1) as number;
-			const pageSize = autoPaginate ? Math.min(100, size) : (executeFunctions.getNodeParameter('page_size', i, 100) as number);
+			const pageSize = autoPaginate ? Math.min(40, size) : (executeFunctions.getNodeParameter('page_size', i, 100) as number);
 			
 
 			// Build filters object from individual parameters
@@ -677,15 +677,12 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			);
 		};
 
-		// @ts-ignore
-		console.log(autoPaginate, useJsonInput, size);
 		if (autoPaginate && !useJsonInput) {
 			let currentPage = 1;
+			let fetchedCount = 0;
+			let targetCount = size;
 
-			let totalFetchedEntitiesCount = 0;
-			let shouldKeepFetching = false;
-			
-			do {
+			while (fetchedCount < targetCount) {
 				const response = await fetchPage(currentPage);
 				const data = Array.isArray(response.data) ? response.data : [];
 
@@ -693,22 +690,19 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 					break;
 				}
 
-				totalFetchedEntitiesCount += data.length;
+				fetchedCount += data.length;
+				targetCount = Math.min(size, response.total_results); // in case there are less results than requested size
 
-				// TODO: Patch because currently the endpoint returns all of the entities on the last page (not only the remaining ones).
+				// This is a patch because currently the endpoint returns all of the entities on the last page (not only the remaining ones).
 				// This is a temporary fix to ensure that the correct number of entities are returned.
-				if (totalFetchedEntitiesCount > size) {
-					data.splice(totalFetchedEntitiesCount - size);
+				if (fetchedCount > targetCount) {
+					data.splice(targetCount - fetchedCount);
 				}
 
 				handleResponseData(returnData, response, extractData, data);
 
 				currentPage += 1;
-
-				// @ts-ignore
-				console.log(totalFetchedEntitiesCount, size, response.total_results);
-				shouldKeepFetching = totalFetchedEntitiesCount < Math.min(size, response.total_results)
-			} while (shouldKeepFetching);
+			}
 		} else {
 			const response = await fetchPage();
 			handleResponseData(returnData, response, extractData, response.data);
