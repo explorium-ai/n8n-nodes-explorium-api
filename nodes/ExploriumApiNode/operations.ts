@@ -1575,7 +1575,7 @@ export const operations = {
 			},
 		],
 	},
-	autocomplete: 
+	autocomplete: {
 		displayName: 'Autocomplete',
 		description: 'Get field suggestions and autocomplete values',
 		docsHref: [
