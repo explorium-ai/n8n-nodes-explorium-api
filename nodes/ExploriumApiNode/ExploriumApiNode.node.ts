@@ -421,10 +421,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 
 		let requestBody: any;
 		let autoPaginate = false;
-		let size = 20;
-		let page = 1;
-		let pageSize = 100;
-		let mode = 'preview';
+		let size = 0;
 
 		if (useJsonInput) {
 			// Use JSON input directly
@@ -432,13 +429,11 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			requestBody = jsonInput;
 		} else {
 			// Get pagination and mode parameters
-			mode = executeFunctions.getNodeParameter('mode', i, 'preview') as string;
+			const mode = executeFunctions.getNodeParameter('mode', i, 'preview') as string;
 			size = executeFunctions.getNodeParameter('size', i, 20) as number;
-			page = executeFunctions.getNodeParameter('page', i, 1) as number;
 			autoPaginate = executeFunctions.getNodeParameter('auto_paginate', i, false) as boolean;
-			pageSize = autoPaginate
-				? Math.min(100, size)
-				: (executeFunctions.getNodeParameter('page_size', i, 100) as number);
+			const page = autoPaginate ? undefined : executeFunctions.getNodeParameter('page', i, 1) as number;
+			const pageSize = autoPaginate ? Math.min(100, size) : (executeFunctions.getNodeParameter('page_size', i, 100) as number);
 			
 
 			// Build filters object from individual parameters
@@ -682,6 +677,8 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			);
 		};
 
+		// @ts-ignore
+		console.log(autoPaginate, useJsonInput, size);
 		if (autoPaginate && !useJsonInput) {
 			let currentPage = 1;
 
@@ -698,9 +695,9 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 
 				totalFetchedEntitiesCount += data.length;
 
-				// TODO: Patch because currently the endpoint returns all of the entities on the last page (some "next_cursor" parameter issue).
+				// TODO: Patch because currently the endpoint returns all of the entities on the last page (not only the remaining ones).
 				// This is a temporary fix to ensure that the correct number of entities are returned.
-				if (totalFetchedEntitiesCount >= size) {
+				if (totalFetchedEntitiesCount > size) {
 					data.splice(totalFetchedEntitiesCount - size);
 				}
 
@@ -708,7 +705,8 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 
 				currentPage += 1;
 
-				
+				// @ts-ignore
+				console.log(totalFetchedEntitiesCount, size, response.total_results);
 				shouldKeepFetching = totalFetchedEntitiesCount < Math.min(size, response.total_results)
 			} while (shouldKeepFetching);
 		} else {
