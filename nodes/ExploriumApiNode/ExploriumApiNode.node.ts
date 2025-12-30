@@ -433,7 +433,7 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 			size = executeFunctions.getNodeParameter('size', i, 20) as number;
 			autoPaginate = executeFunctions.getNodeParameter('auto_paginate', i, false) as boolean;
 			const page = autoPaginate ? undefined : executeFunctions.getNodeParameter('page', i, 1) as number;
-			const pageSize = autoPaginate ? Math.min(40, size) : (executeFunctions.getNodeParameter('page_size', i, 100) as number);
+			const pageSize = autoPaginate ? Math.min(100, size) : (executeFunctions.getNodeParameter('page_size', i, 100) as number);
 			
 
 			// Build filters object from individual parameters
