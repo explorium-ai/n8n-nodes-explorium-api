@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure version is newer than latest tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="v$(node -p "require('./package.json').version")"
+          latest="$(git describe --tags --abbrev=0 2>/dev/null || echo 'v0.0.0')"
+
+          echo "package.json → $current"
+          echo "git tags     → $latest"
+
+          if [ "$current" = "$latest" ]; then
+            echo "::error::Tag $current already exists — bump the version"
+            exit 1
+          fi
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: version-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
