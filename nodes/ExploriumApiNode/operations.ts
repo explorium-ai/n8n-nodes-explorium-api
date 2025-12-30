@@ -515,7 +515,7 @@ export const operations = {
 				name: 'extractData',
 				type: 'boolean',
 				default: false,
-				description: 'to return only the data field contents as response without execution metadata fields (set toggle to true)',
+				description: 'Whether to return only the data field contents as response without execution metadata fields (set toggle to true)',
 			},
 			{
 				displayName: 'Mode',
@@ -1575,7 +1575,7 @@ export const operations = {
 			},
 		],
 	},
-	autocomplete: {
+	autocomplete: 
 		displayName: 'Autocomplete',
 		description: 'Get field suggestions and autocomplete values',
 		docsHref: [
