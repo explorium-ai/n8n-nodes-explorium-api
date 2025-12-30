@@ -1577,7 +1577,7 @@ export const operations = {
 	},
 	autocomplete: {
 		displayName: 'Autocomplete',
-		description: 'Get field suggestions and autocomplete values',
+		description: 'Get field suggestions and autocomplete',
 		docsHref: [
 			{
 				href: 'https://developers.explorium.ai/reference/businesses_autocomplete',
