@@ -420,6 +420,8 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 		const extractData = executeFunctions.getNodeParameter('extractData', i, false) as boolean;
 
 		let requestBody: any;
+		let autoPaginate = false;
+		let size = 0;
 
 		if (useJsonInput) {
 			// Use JSON input directly
@@ -428,9 +430,11 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 		} else {
 			// Get pagination and mode parameters
 			const mode = executeFunctions.getNodeParameter('mode', i, 'preview') as string;
-			const size = executeFunctions.getNodeParameter('size', i, 20) as number;
-			const pageSize = executeFunctions.getNodeParameter('page_size', i, 100) as number;
-			const page = executeFunctions.getNodeParameter('page', i, 1) as number;
+			size = executeFunctions.getNodeParameter('size', i, 20) as number;
+			autoPaginate = executeFunctions.getNodeParameter('auto_paginate', i, false) as boolean;
+			const page = autoPaginate ? undefined : executeFunctions.getNodeParameter('page', i, 1) as number;
+			const pageSize = autoPaginate ? Math.min(40, size) : (executeFunctions.getNodeParameter('page_size', i, 100) as number);
+			
 
 			// Build filters object from individual parameters
 			const filters: any = {};
@@ -659,18 +663,50 @@ async function executeFetch(executeFunctions: IExecuteFunctions): Promise<INodeE
 
 		const endpoint = type === 'businesses' ? '/v1/businesses' : '/v1/prospects';
 
-		const response = await executeFunctions.helpers.httpRequestWithAuthentication.call(
-			executeFunctions,
-			'exploriumApi',
-			{
-				method: 'POST',
-				url: `https://api.explorium.ai${endpoint}`,
-				body: requestBody,
-				json: true,
-			},
-		);
+		const fetchPage = async (pageOverride?: number) => {
+			const body = pageOverride !== undefined ? { ...requestBody, page: pageOverride } : requestBody;
+			return executeFunctions.helpers.httpRequestWithAuthentication.call(
+				executeFunctions,
+				'exploriumApi',
+				{
+					method: 'POST',
+					url: `https://api.explorium.ai${endpoint}`,
+					body,
+					json: true,
+				},
+			);
+		};
 
-		handleResponseData(returnData, response, extractData, response.data);
+		if (autoPaginate && !useJsonInput) {
+			let currentPage = 1;
+			let fetchedCount = 0;
+			let targetCount = size;
+
+			while (fetchedCount < targetCount) {
+				const response = await fetchPage(currentPage);
+				const data = Array.isArray(response.data) ? response.data : [];
+
+				if (data.length === 0) {
+					break;
+				}
+
+				fetchedCount += data.length;
+				targetCount = Math.min(size, response.total_results); // in case there are less results than requested size
+
+				// This is a patch because currently the endpoint returns all of the entities on the last page (not only the remaining ones).
+				// This is a temporary fix to ensure that the correct number of entities are returned.
+				if (fetchedCount > targetCount) {
+					data.splice(targetCount - fetchedCount);
+				}
+
+				handleResponseData(returnData, response, extractData, data);
+
+				currentPage += 1;
+			}
+		} else {
+			const response = await fetchPage();
+			handleResponseData(returnData, response, extractData, response.data);
+		}
 	}
 	return [returnData];
 }
