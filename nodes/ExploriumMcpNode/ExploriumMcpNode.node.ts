@@ -14,6 +14,7 @@ export class ExploriumMcpNode implements INodeType {
 		group: ['output'],
 		version: 1,
 		description: 'Make requests to OpenAI with Explorium MCP integration',
+		usableAsTool: true,
 		defaults: {
 			name: 'Explorium MCP',
 		},
